@@ -125,7 +125,7 @@ class Choco3Translator extends Visitor {
 		case LT:
 			if (l instanceof Integer) {
 				//stack.push(choco.Choco.lt((Integer) l, (IntegerExpressionVariable) r));
-				stack.push(IntConstraintFactory.arithm((IntVar) r, ">=", (Integer) l));
+				stack.push(IntConstraintFactory.arithm((IntVar) r, ">", (Integer) l));
 			} else if (r instanceof Integer) {
 				//stack.push(choco.Choco.lt((IntegerExpressionVariable) l, (Integer) r));
 				stack.push(IntConstraintFactory.arithm((IntVar) l, "<", (Integer) r));
@@ -137,7 +137,7 @@ class Choco3Translator extends Visitor {
 		case LE:
 			if (l instanceof Integer) {
 				//stack.push(choco.Choco.leq((Integer) l, (IntegerExpressionVariable) r));
-				stack.push(IntConstraintFactory.arithm((IntVar) r, ">", (Integer) l));
+				stack.push(IntConstraintFactory.arithm((IntVar) r, ">=", (Integer) l));
 			} else if (r instanceof Integer) {
 				//stack.push(choco.Choco.leq((IntegerExpressionVariable) l, (Integer) r));
 				stack.push(IntConstraintFactory.arithm((IntVar) l, "<=", (Integer) r));
@@ -149,7 +149,7 @@ class Choco3Translator extends Visitor {
 		case GT:
 			if (l instanceof Integer) {
 				//stack.push(choco.Choco.gt((Integer) l, (IntegerExpressionVariable) r));
-				stack.push(IntConstraintFactory.arithm((IntVar) r, "<=", (Integer) l));
+				stack.push(IntConstraintFactory.arithm((IntVar) r, "<", (Integer) l));
 			} else if (r instanceof Integer) {
 				//stack.push(choco.Choco.gt((IntegerExpressionVariable) l, (Integer) r));
 				stack.push(IntConstraintFactory.arithm((IntVar) l, ">", (Integer) r));
@@ -161,7 +161,7 @@ class Choco3Translator extends Visitor {
 		case GE:
 			if (l instanceof Integer) {
 				//stack.push(choco.Choco.geq((Integer) l, (IntegerExpressionVariable) r));
-				stack.push(IntConstraintFactory.arithm((IntVar) r, "<", (Integer) l));
+				stack.push(IntConstraintFactory.arithm((IntVar) r, "<=", (Integer) l));
 			} else if (r instanceof Integer) {
 				//stack.push(choco.Choco.geq((IntegerExpressionVariable) l, (Integer) r));
 				stack.push(IntConstraintFactory.arithm((IntVar) l, ">=", (Integer) r));
