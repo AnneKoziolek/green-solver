@@ -5,6 +5,11 @@ import java.util.NoSuchElementException;
 
 public class Operation extends Expression {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6628353039467454097L;
+
 	public static enum Fix {
 		PREFIX, INFIX, POSTFIX;
 	}

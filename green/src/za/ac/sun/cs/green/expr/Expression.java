@@ -1,6 +1,13 @@
 package za.ac.sun.cs.green.expr;
 
-public abstract class Expression implements Comparable<Expression> {
+import java.io.Serializable;
+
+public abstract class Expression implements Comparable<Expression>, Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7300060803953598321L;
 
 	public abstract void accept(Visitor visitor) throws VisitorException;
 
