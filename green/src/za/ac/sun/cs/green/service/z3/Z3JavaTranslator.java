@@ -89,13 +89,11 @@ class Z3JavaTranslator extends Visitor {
 
 	@Override
 	public void postVisit(StringVariable stringVariable) throws VisitorException {
-		System.out.println("Visit str: " + stringVariable);
 		Expr v = v2e.get(stringVariable);
 		if(v == null)
 		{
 			v = context.mkConst(stringVariable.getName(), context.getStringSort());
 			v2e.put(stringVariable, v);
-//			domains.add(context.mkGe(context.mkLength((SeqExpr) v), context.mkInt(0)));
 		}
 		stack.push(v);
 	}
