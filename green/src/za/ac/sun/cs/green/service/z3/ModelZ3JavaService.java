@@ -15,6 +15,8 @@ import com.microsoft.z3.Z3Exception;
 
 import za.ac.sun.cs.green.Instance;
 import za.ac.sun.cs.green.Green;
+import za.ac.sun.cs.green.expr.ArrayVariable;
+import za.ac.sun.cs.green.expr.StringVariable;
 import za.ac.sun.cs.green.expr.Variable;
 import za.ac.sun.cs.green.expr.VisitorException;
 import za.ac.sun.cs.green.service.ModelService;
@@ -69,7 +71,14 @@ public class ModelZ3JavaService extends ModelService {
 						val = Integer.parseInt(z3Val.toString());
 					} else if (z3Val.isRatNum()) {
 						val = Double.parseDouble(z3Val.toString());
-					} else {
+					} else if(greenVar instanceof StringVariable){
+						//Must be string?
+						val = z3Val.toString();
+					} else if(greenVar instanceof ArrayVariable)
+					{
+						System.out.println("Arr: "  +z3Val);
+					} else
+					{
 						log.log(Level.WARNING, "Error unsupported type for variable " + z3Val);
 						return null;
 					}

@@ -20,6 +20,8 @@ import za.ac.sun.cs.green.expr.Constant;
 import za.ac.sun.cs.green.expr.IntConstant;
 import za.ac.sun.cs.green.expr.IntVariable;
 import za.ac.sun.cs.green.expr.Operation;
+import za.ac.sun.cs.green.expr.StringConstant;
+import za.ac.sun.cs.green.expr.StringVariable;
 import za.ac.sun.cs.green.expr.Variable;
 import za.ac.sun.cs.green.expr.Visitor;
 import za.ac.sun.cs.green.expr.VisitorException;
@@ -94,11 +96,16 @@ public class SATCanonizerService extends BasicService {
 			stack.push(constant);
 		}
 
+
 		@Override
-		public void postVisit(IntVariable variable) {
-			stack.push(variable);
+		public void postVisit(StringConstant stringConstant) throws VisitorException {
+			stack.push(stringConstant);
 		}
 
+		@Override
+		public void postVisit(Variable variable) throws VisitorException {
+			stack.push(variable);
+		}
 		@Override
 		public void postVisit(Operation operation) throws VisitorException {
 			Operation.Operator op = operation.getOperator();

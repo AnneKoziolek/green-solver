@@ -389,7 +389,10 @@ public class FactorExpression {
 		public void preVisit(Expression expression) {
 			if (expression instanceof Operation) {
 				Operation.Operator op = ((Operation) expression).getOperator();
-				if ((op == Operation.Operator.EQ) || (op == Operation.Operator.NE) || (op == Operation.Operator.LT) || (op == Operation.Operator.LE) || (op == Operation.Operator.GT) || (op == Operation.Operator.GE)) {
+				if ((op == Operation.Operator.EQ) || (op == Operation.Operator.NE) || (op == Operation.Operator.LT) || (op == Operation.Operator.LE) || (op == Operation.Operator.GT) || (op == Operation.Operator.GE)
+						|| op == Operation.Operator.STARTSWITH || op == Operation.Operator.ENDSWITH ||
+						op == Operation.Operator.CONTAINS || op == Operation.Operator.EQUALS
+						|| op == Operation.Operator.EQUALSIGNORECASE) {
 					currentConjunct = expression;
 				}
 			}

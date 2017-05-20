@@ -1,24 +1,31 @@
 package za.ac.sun.cs.green.service.z3;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import za.ac.sun.cs.green.expr.ArrayVariable;
 import za.ac.sun.cs.green.expr.IntConstant;
 import za.ac.sun.cs.green.expr.IntVariable;
 import za.ac.sun.cs.green.expr.Operation;
 import za.ac.sun.cs.green.expr.RealConstant;
 import za.ac.sun.cs.green.expr.RealVariable;
+import za.ac.sun.cs.green.expr.StringConstant;
+import za.ac.sun.cs.green.expr.StringVariable;
 import za.ac.sun.cs.green.expr.Variable;
 import za.ac.sun.cs.green.expr.Visitor;
 import za.ac.sun.cs.green.expr.VisitorException;
 
 import com.microsoft.z3.ArithExpr;
+import com.microsoft.z3.ArrayExpr;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
+import com.microsoft.z3.SeqExpr;
+import com.microsoft.z3.Sort;
 import com.microsoft.z3.Z3Exception;
 
 class Z3JavaTranslator extends Visitor {
@@ -56,8 +63,12 @@ class Z3JavaTranslator extends Visitor {
 	public Map<Variable, Expr> getVariableMap() {
 		return v2e;
 	}
-	
 
+	@Override
+	public void postVisit(StringConstant stringConstant) throws VisitorException {
+		stack.push(context.mkString(stringConstant.getValue()));
+	}
+	
 	@Override
 	public void postVisit(IntConstant constant) {			
 		try {
@@ -76,6 +87,32 @@ class Z3JavaTranslator extends Visitor {
 		}
 	}
 
+	@Override
+	public void postVisit(StringVariable stringVariable) throws VisitorException {
+		System.out.println("Visit str: " + stringVariable);
+		Expr v = v2e.get(stringVariable);
+		if(v == null)
+		{
+			v = context.mkConst(stringVariable.getName(), context.getStringSort());
+			v2e.put(stringVariable, v);
+//			domains.add(context.mkGe(context.mkLength((SeqExpr) v), context.mkInt(0)));
+		}
+		stack.push(v);
+	}
+	
+	@Override
+	public void postVisit(Variable variable) throws VisitorException {
+		if(variable instanceof ArrayVariable)
+		{
+			Expr v = v2e.get(variable);
+			if(v == null)
+			{
+				v = context.mkConst(variable.getName(), context.mkArraySort(context.getIntSort(), context.getIntSort()));
+				v2e.put(variable, v);
+			}
+			stack.push(v);
+		}
+	}
 	@Override
 	public void postVisit(IntVariable variable) {
 		Expr v = v2e.get(variable);
@@ -173,6 +210,18 @@ class Z3JavaTranslator extends Visitor {
 				break;
 			case DIV:
 				stack.push(context.mkDiv((ArithExpr) l, (ArithExpr) r));
+				break;
+			case ENDSWITH:
+				stack.push(context.mkSuffixOf((SeqExpr) l, (SeqExpr) r));
+				break;
+			case STARTSWITH:
+				stack.push(context.mkPrefixOf((SeqExpr) l, (SeqExpr) r));
+				break;
+			case LENGTH:
+				stack.push(context.mkLength((SeqExpr) l));
+				break;
+			case SELECT:
+				stack.push(context.mkSelect((ArrayExpr) l, r));
 				break;
 			default:
 				throw new TranslatorUnsupportedOperation(
