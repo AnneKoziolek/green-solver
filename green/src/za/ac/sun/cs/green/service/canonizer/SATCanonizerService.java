@@ -92,15 +92,10 @@ public class SATCanonizerService extends BasicService {
 		}
 
 		@Override
-		public void postVisit(IntConstant constant) {
+		public void postVisit(Constant constant) {
 			stack.push(constant);
 		}
 
-
-		@Override
-		public void postVisit(StringConstant stringConstant) throws VisitorException {
-			stack.push(stringConstant);
-		}
 
 		@Override
 		public void postVisit(Variable variable) throws VisitorException {

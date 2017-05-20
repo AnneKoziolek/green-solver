@@ -24,6 +24,8 @@ import com.microsoft.z3.ArrayExpr;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
+import com.microsoft.z3.IntExpr;
+import com.microsoft.z3.IntNum;
 import com.microsoft.z3.SeqExpr;
 import com.microsoft.z3.Sort;
 import com.microsoft.z3.Z3Exception;
@@ -155,6 +157,7 @@ class Z3JavaTranslator extends Visitor {
 	public void postVisit(Operation operation) throws VisitorException {
 		Expr l = null;
 		Expr r = null;
+		Expr o = null;
 		int arity = operation.getOperator().getArity();
 		if (arity == 2) {
 			if (!stack.isEmpty()) {
@@ -167,11 +170,28 @@ class Z3JavaTranslator extends Visitor {
 			if (!stack.isEmpty()) {
 				l = stack.pop();
 			}
+		} else if(arity == 3)
+		{
+			if (!stack.isEmpty()) {
+				o = stack.pop();
+			}
+			if (!stack.isEmpty()) {
+				r = stack.pop();
+			}
+			if (!stack.isEmpty()) {
+				l = stack.pop();
+			}
 		}
 		try {
 			switch (operation.getOperator()) {
 			case EQ:
-				stack.push(context.mkEq(l, r));
+				if(l instanceof SeqExpr && r instanceof IntNum)
+				{
+					//comparing a string to a single char
+					stack.push(context.mkEq(l, context.mkString(new String(new char[]{(char) ((IntNum)r).getInt()}))));
+				}
+				else
+					stack.push(context.mkEq(l, r));
 				break;
 			case NE:
 				stack.push(context.mkNot(context.mkEq(l, r)));
@@ -209,6 +229,18 @@ class Z3JavaTranslator extends Visitor {
 			case DIV:
 				stack.push(context.mkDiv((ArithExpr) l, (ArithExpr) r));
 				break;
+			case MOD:
+				stack.push(context.mkMod((IntExpr) l, (IntExpr) r));
+				break;
+			case SHIFTL:
+				stack.push(context.mkBV2Int(context.mkBVSHL(context.mkInt2BV(32, (IntExpr)l), context.mkInt2BV(32, (IntExpr)r)), true));
+				break;
+			case SHIFTR:
+				stack.push(context.mkBV2Int(context.mkBVASHR(context.mkInt2BV(32, (IntExpr)l), context.mkInt2BV(32, (IntExpr)r)), true));
+				break;
+			case SHIFTUR:
+				stack.push(context.mkBV2Int(context.mkBVLSHR(context.mkInt2BV(32, (IntExpr)l), context.mkInt2BV(32, (IntExpr)r)), true));
+				break;
 			case ENDSWITH:
 				stack.push(context.mkSuffixOf((SeqExpr) l, (SeqExpr) r));
 				break;
@@ -220,6 +252,30 @@ class Z3JavaTranslator extends Visitor {
 				break;
 			case SELECT:
 				stack.push(context.mkSelect((ArrayExpr) l, r));
+				break;
+			case EQUALS:
+				stack.push(context.mkEq(l, r));
+				break;
+			case CONCAT:
+				stack.push(context.mkConcat((SeqExpr) l,(SeqExpr) r));
+				break;
+			case SUBSTRING:
+				stack.push(context.mkExtract((SeqExpr)l, (IntExpr) r, (IntExpr) o));
+				break;
+			case CHARAT:
+				stack.push(context.mkAt((SeqExpr)l, (IntExpr) r));
+				break;
+			case BIT_OR:
+				stack.push(context.mkBV2Int(context.mkBVOR(context.mkInt2BV(32, (IntExpr)l), context.mkInt2BV(32, (IntExpr)r)), true));
+				break;
+			case BIT_AND:
+				stack.push(context.mkBV2Int(context.mkBVAND(context.mkInt2BV(32, (IntExpr)l), context.mkInt2BV(32, (IntExpr)r)), true));
+				break;
+			case BIT_NOT:
+				stack.push(context.mkBV2Int(context.mkBVNot(context.mkInt2BV(32, (IntExpr)l)), true));
+				break;
+			case BIT_XOR:
+				stack.push(context.mkBV2Int(context.mkBVXOR(context.mkInt2BV(32, (IntExpr)l), context.mkInt2BV(32, (IntExpr)r)), true));
 				break;
 			default:
 				throw new TranslatorUnsupportedOperation(
