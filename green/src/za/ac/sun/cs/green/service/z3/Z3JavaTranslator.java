@@ -1,13 +1,18 @@
 package za.ac.sun.cs.green.service.z3;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.Stack;
 
 import za.ac.sun.cs.green.expr.ArrayVariable;
+import za.ac.sun.cs.green.expr.Expression;
 import za.ac.sun.cs.green.expr.IntConstant;
 import za.ac.sun.cs.green.expr.IntVariable;
 import za.ac.sun.cs.green.expr.Operation;
@@ -18,19 +23,21 @@ import za.ac.sun.cs.green.expr.StringVariable;
 import za.ac.sun.cs.green.expr.Variable;
 import za.ac.sun.cs.green.expr.Visitor;
 import za.ac.sun.cs.green.expr.VisitorException;
+import za.ac.sun.cs.green.util.NotSatException;
 
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.ArrayExpr;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
+import com.microsoft.z3.FuncDecl;
 import com.microsoft.z3.IntExpr;
 import com.microsoft.z3.IntNum;
 import com.microsoft.z3.SeqExpr;
 import com.microsoft.z3.Sort;
 import com.microsoft.z3.Z3Exception;
 
-class Z3JavaTranslator extends Visitor {
+public class Z3JavaTranslator extends Visitor {
 	
 	private Context context = null;
 
@@ -38,20 +45,43 @@ class Z3JavaTranslator extends Visitor {
 	
 	private List<BoolExpr> domains = null;
 
+	private List<BoolExpr> charAtHacks = null;
+
+	
 	private Map<Variable, Expr> v2e = null;
 
+	private Map<String, Expr> charAts = null;
+	
 	public Z3JavaTranslator(Context c) {
 		this.context = c;
 		stack = new Stack<Expr>();
 		v2e = new HashMap<Variable, Expr>();
 		domains = new LinkedList<BoolExpr>();
+		charAts = new HashMap<String, Expr>();
+		charAtHacks = new LinkedList<BoolExpr>();
 	}
-
+	public Z3GreenBridge getTranslationInternal() {
+		Z3GreenBridge ret = new Z3GreenBridge();
+		ret.constraints_int = (BoolExpr)stack.pop();
+		ret.domains = domains;
+		ret.varNames = new HashSet<String>();
+		for(Variable v : v2e.keySet())
+			ret.varNames.add(v.getName());
+		ret.charAts = charAts.keySet();
+		return ret;
+	}
 	public BoolExpr getTranslation() {
 		BoolExpr result = (BoolExpr)stack.pop();
 		/* not required due to Bounder being used */
 		/* not sure why this was commented out, it is clearly wrong, with or without bounder */
 		for (BoolExpr expr : domains) {
+			try {
+				result = context.mkAnd(result,expr);
+			} catch (Z3Exception e) {
+				e.printStackTrace();
+			}
+		}
+		for (BoolExpr expr : charAtHacks) {
 			try {
 				result = context.mkAnd(result,expr);
 			} catch (Z3Exception e) {
@@ -95,6 +125,8 @@ class Z3JavaTranslator extends Visitor {
 		if(v == null)
 		{
 			v = context.mkConst(stringVariable.getName(), context.getStringSort());
+			if(stringVariable.observedLength > 0)
+				domains.add(context.mkLt(context.mkInt(stringVariable.observedLength), context.mkLength((SeqExpr) v)));
 			v2e.put(stringVariable, v);
 		}
 		stack.push(v);
@@ -152,7 +184,7 @@ class Z3JavaTranslator extends Visitor {
 		}
 		stack.push(v);
 	}
-
+	
 	@Override
 	public void postVisit(Operation operation) throws VisitorException {
 		Expr l = null;
@@ -184,29 +216,172 @@ class Z3JavaTranslator extends Visitor {
 		}
 		try {
 			switch (operation.getOperator()) {
+			case NOT:
+				stack.push(context.mkNot((BoolExpr) l));
+				break;
 			case EQ:
 				if(l instanceof SeqExpr && r instanceof IntNum)
 				{
 					//comparing a string to a single char
 					stack.push(context.mkEq(l, context.mkString(new String(new char[]{(char) ((IntNum)r).getInt()}))));
 				}
+				else if(r instanceof SeqExpr && l instanceof IntNum)
+				{
+					//comparing a string to a single char
+					stack.push(context.mkEq(r, context.mkString(new String(new char[]{(char) ((IntNum)l).getInt()}))));
+				}
 				else
 					stack.push(context.mkEq(l, r));
 				break;
 			case NE:
-				stack.push(context.mkNot(context.mkEq(l, r)));
+				if(l instanceof SeqExpr && r instanceof IntNum)
+				{
+					//comparing a string to a single char
+					stack.push(context.mkNot(context.mkEq(l, context.mkString(new String(new char[]{(char) ((IntNum)r).getInt()})))));
+				}
+				else if(r instanceof SeqExpr && l instanceof IntNum)
+				{
+					//comparing a string to a single char
+					stack.push(context.mkNot(context.mkEq(r, context.mkString(new String(new char[]{(char) ((IntNum)l).getInt()})))));
+				}
+				else
+					stack.push(context.mkNot(context.mkEq(l, r)));
 				break;
 			case LT:
-				stack.push(context.mkLt((ArithExpr) l, (ArithExpr) r));
+				if(r instanceof SeqExpr && l instanceof IntNum)
+				{
+					int v = ((IntNum)l).getInt();
+					BoolExpr exp = null;
+					for(char i = (char) (v +1); i <= 127; i++)
+					{
+						if(exp == null)
+							exp = context.mkEq(r, context.mkString(Character.toString(i)));
+						else
+							exp = context.mkOr(exp,context.mkEq(r, context.mkString(Character.toString(i))));
+					}
+					if(exp == null)
+						throw new NotSatException();
+					stack.push(exp);
+				}
+				else if(r instanceof IntNum && l instanceof SeqExpr)
+				{
+					int v = ((IntNum)r).getInt();
+					BoolExpr exp = null;
+					for(char i = 0; i < v; i++)
+					{
+						if(exp == null)
+							exp = context.mkEq(l, context.mkString(Character.toString(i)));
+						else
+							exp = context.mkOr(exp,context.mkEq(l, context.mkString(Character.toString(i))));
+					}
+					if(exp == null)
+						throw new NotSatException();
+					stack.push(exp);
+				}
+				else
+					stack.push(context.mkLt((ArithExpr) l, (ArithExpr) r));
 				break;
 			case LE:
-				stack.push(context.mkLe((ArithExpr) l, (ArithExpr) r));
+				if(r instanceof SeqExpr && l instanceof IntNum)
+				{
+					int v = ((IntNum)l).getInt();
+					BoolExpr exp = null;
+					for(char i = (char) (v); i <= 127; i++)
+					{
+						if(exp == null)
+							exp = context.mkEq(r, context.mkString(Character.toString(i)));
+						else
+							exp = context.mkOr(exp,context.mkEq(r, context.mkString(Character.toString(i))));
+					}
+					if(exp == null)
+						throw new NotSatException();
+					stack.push(exp);
+				}
+				else if(r instanceof IntNum && l instanceof SeqExpr)
+				{
+					int v = ((IntNum)r).getInt();
+					BoolExpr exp = null;
+					for(char i = 0; i <= v; i++)
+					{
+						if(exp == null)
+							exp = context.mkEq(l, context.mkString(Character.toString(i)));
+						else
+							exp = context.mkOr(exp,context.mkEq(l, context.mkString(Character.toString(i))));
+					}
+					if(exp == null)
+						throw new NotSatException();
+					stack.push(exp);
+				}
+				else
+					stack.push(context.mkLe((ArithExpr) l, (ArithExpr) r));
 				break;
 			case GT:
+				if(r instanceof SeqExpr && l instanceof IntNum)
+				{
+					int v = ((IntNum)l).getInt();
+					BoolExpr exp = null;
+					for(char i = 0; i < v; i++)
+					{
+						if(exp == null)
+							exp = context.mkEq(r, context.mkString(Character.toString(i)));
+						else
+							exp = context.mkOr(exp,context.mkEq(r, context.mkString(Character.toString(i))));
+					}
+					if(exp == null)
+						throw new NotSatException();
+					stack.push(exp);
+				}
+				else if(r instanceof IntNum && l instanceof SeqExpr)
+				{
+					int v = ((IntNum)r).getInt();
+					BoolExpr exp = null;
+					for(char i = (char) (v+1); i <= 127; i++)
+					{
+						if(exp == null)
+							exp = context.mkEq(l, context.mkString(Character.toString(i)));
+						else
+							exp = context.mkOr(exp,context.mkEq(l, context.mkString(Character.toString(i))));
+					}
+					if(exp == null)
+						throw new NotSatException();
+					stack.push(exp);
+				}
+				else
 				stack.push(context.mkGt((ArithExpr) l, (ArithExpr) r));
 				break;
 			case GE:
-				stack.push(context.mkGe((ArithExpr) l, (ArithExpr) r));
+				if(r instanceof SeqExpr && l instanceof IntNum)
+				{
+					int v = ((IntNum)l).getInt();
+					BoolExpr exp = null;
+					for(char i = 0; i <= v; i++)
+					{
+						if(exp == null)
+							exp = context.mkEq(r, context.mkString(Character.toString(i)));
+						else
+							exp = context.mkOr(exp,context.mkEq(r, context.mkString(Character.toString(i))));
+					}
+					if(exp == null)
+						throw new NotSatException();
+					stack.push(exp);
+				}
+				else if(r instanceof IntNum && l instanceof SeqExpr)
+				{
+					int v = ((IntNum)r).getInt();
+					BoolExpr exp = null;
+					for(char i = (char) v; i <= 127; i++)
+					{
+						if(exp == null)
+							exp = context.mkEq(l, context.mkString(Character.toString(i)));
+						else
+							exp = context.mkOr(exp,context.mkEq(l, context.mkString(Character.toString(i))));
+					}
+					if(exp == null)
+						throw new NotSatException();
+					stack.push(exp);
+				}
+				else
+					stack.push(context.mkGe((ArithExpr) l, (ArithExpr) r));
 				break;
 			case AND:
 				stack.push(context.mkAnd((BoolExpr) l, (BoolExpr) r));
@@ -263,7 +438,26 @@ class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkExtract((SeqExpr)l, (IntExpr) r, (IntExpr) o));
 				break;
 			case CHARAT:
-				stack.push(context.mkAt((SeqExpr)l, (IntExpr) r));
+				if (l.isConst() && r.isIntNum()) {
+					String key = l.toString() + "_charat_" + ((IntNum) r).getInt();
+					if (!charAts.containsKey(key)) {
+						IntExpr e = context.mkIntConst(key);
+						domains.add(context.mkAnd(context.mkGe(e, context.mkInt(0)), context.mkLe(e, context.mkInt(128))));
+						charAts.put(key, e);
+//						v2e.put(new IntVariable(key, 0, 128), e);
+						Expr charToInt = null;
+						for (int i = 0; i <= 128; i++) {
+							if (charToInt == null)
+								charToInt = context.mkInt(i);
+							else
+								charToInt = context.mkITE(context.mkEq(context.mkAt((SeqExpr) l, (IntExpr) r), context.mkString(String.valueOf((char) i))), context.mkInt(i), charToInt);
+						}
+						charAtHacks.add(context.mkEq(charToInt, e));
+					}
+					stack.push(charAts.get(key));
+				}
+				else
+					stack.push(context.mkAt((SeqExpr)l, (IntExpr) r));
 				break;
 			case BIT_OR:
 				stack.push(context.mkBV2Int(context.mkBVOR(context.mkInt2BV(32, (IntExpr)l), context.mkInt2BV(32, (IntExpr)r)), true));
@@ -283,6 +477,60 @@ class Z3JavaTranslator extends Visitor {
 			}
 		} catch (Z3Exception e) {
 			e.printStackTrace();
+		}
+	}
+	
+	public static class Z3GreenBridge{
+		public Set<String> charAts;
+		public Expression constraints;
+		public BoolExpr constraints_int;
+		public Expression metaConstraints;
+		public List<BoolExpr> domains;
+		public Set<String> varNames;
+		public Collection<Expr> z3vars;
+		
+		@Override
+		public String toString() {
+			return "Z3GreenBridge [charAts=" + charAts + ", constraints=" + constraints + ", metaConstraints=" + metaConstraints + "]";
+		}
+		public BoolExpr convertToZ3(Context ctx) throws VisitorException {
+			//First convert the regular constraints
+			Z3JavaTranslator translator = new Z3JavaTranslator(ctx);
+			constraints.accept(translator);
+			Map<Variable,Expr> v2e = translator.v2e;
+			z3vars = v2e.values();
+			BoolExpr ret = translator.getTranslationInternal().constraints_int;
+//			System.out.println("Before charat nonsense: " + ret);
+
+			metaConstraints.accept(translator);
+			ret = ctx.mkAnd(ret,translator.getTranslationInternal().constraints_int);
+//			System.out.println("With constraints "+ ret);
+			for(String s : charAts)
+			{
+				SeqExpr strVar = null;
+				IntExpr strCharAtVar = null;
+				String[] p = s.split("_charat_");
+				for (Entry<Variable,Expr> e : v2e.entrySet())
+				{
+					if (e.getKey().getName().equals(p[0]))
+						strVar = (SeqExpr) e.getValue();
+					else if (e.getKey().getName().equals(s))
+						strCharAtVar = (IntExpr) e.getValue();
+				}
+				int pos = Integer.valueOf(p[1]);
+				Expr charToInt = null;
+				IntExpr posExp = ctx.mkInt(pos);
+				for (int i = 0; i <= 128; i++) {
+					if (charToInt == null)
+						charToInt = ctx.mkInt(i);
+					else
+						charToInt = ctx.mkITE(ctx.mkEq(ctx.mkAt(strVar, posExp), ctx.mkString(String.valueOf((char) i))), ctx.mkInt(i), charToInt);
+				}
+//				System.out.println(charToInt);
+//				System.out.println(strCharAtVar);
+				ret = ctx.mkAnd(ret, ctx.mkEq(charToInt, strCharAtVar));
+			}
+			return ret;
 		}
 	}
 }

@@ -28,4 +28,8 @@ public abstract class Variable extends Expression implements Serializable {
 		return original;
 	}
 
+	@Override
+	public Object clone() {
+		return this;
+	}
 }

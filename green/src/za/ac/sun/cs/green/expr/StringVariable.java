@@ -4,6 +4,8 @@ public class StringVariable extends Variable {
 
 	private static final long serialVersionUID = -4405246046006773012L;
 
+	public int observedLength;
+	
 	public StringVariable(String name) {
 		super(name);
 	}

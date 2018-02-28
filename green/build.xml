@@ -10,7 +10,9 @@
     package           create a jar file of the project
 -->
 
-<project name="green" default="build" basedir=".">
+<project name="green" default="build" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant" >
+
+<artifact:pom id="mypom" file="pom.xml" />
 
 <!--
     Settings
@@ -124,5 +126,17 @@
             <fileset dir="test"/>
         </jar>
     </target>
-
+<target name="install">
+	<artifact:install file="green.jar">
+		<pom refid="mypom"/>
+	</artifact:install>
+</target>
+	<target name="deploy">
+		<artifact:deploy file="green.jar">
+			<remoteRepository url="https://maven.jonbell.net/repository/snapshots">
+				<authentication username="${repository.username}" password="${repository.password}"/>
+				</remoteRepository>
+			<pom refid="mypom"/>
+	  </artifact:deploy>
+	</target>
 </project>

@@ -131,7 +131,7 @@ public class FactorExpression {
 	 * on some existing factors, in which case all dependent factors must be
 	 * merged.
 	 * 
-	 * @param vars
+	 * @param varNames
 	 *            The set of variables involved in the new conjunct
 	 * @param exprs
 	 *            The logical expression being conjoined
