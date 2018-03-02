@@ -24,6 +24,7 @@ public class Operation extends Expression {
 		AND("&&", 2, Fix.INFIX),
 		OR("||", 2, Fix.INFIX),
 		IMPLIES("=>", 2, Fix.INFIX),
+		ITE("ITE", 3),
 		NOT("!", 1, Fix.INFIX),
 		ADD("+", 2, Fix.INFIX),
 		SUB("-", 2, Fix.INFIX),

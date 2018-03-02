@@ -392,6 +392,9 @@ public class Z3JavaTranslator extends Visitor {
 			case IMPLIES:
 				stack.push(context.mkImplies((BoolExpr) l, (BoolExpr) r));
 				break;
+			case ITE:
+				stack.push(context.mkITE((BoolExpr) l, r, o));
+				break;
 			case ADD:
 				stack.push(context.mkAdd((ArithExpr) l, (ArithExpr) r));
 				break;
