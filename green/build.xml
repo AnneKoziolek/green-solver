@@ -11,6 +11,10 @@
 -->
 
 <project name="green" default="build" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant" >
+    <path id="maven-ant-tasks.classpath" path="lib/maven-ant-tasks-2.1.3.jar" />
+    <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+    uri="antlib:org.apache.maven.artifact.ant"
+    classpathref="maven-ant-tasks.classpath" />
 
 <artifact:pom id="mypom" file="pom.xml" />
 
@@ -94,7 +98,7 @@
     TARGET: test
 -->
 
-    <target name="test">
+    <target name="test" depends="build">
     	<echo message="java.library.path = ${z3lib};${cvc3lib}"/>
         <mkdir dir="${junit.dir}"/>
         <junit fork="yes" printsummary="withOutAndErr">
@@ -117,7 +121,7 @@
     TARGET: package
 -->
 
-    <target name="package">
+    <target name="package" depends="build">
         <jar destfile="${jar.file}">
             <fileset dir="${output.dir}">
                 <exclude name="${junit.dir}"/>
@@ -126,12 +130,12 @@
             <fileset dir="test"/>
         </jar>
     </target>
-<target name="install">
+<target name="install" depends="package">
 	<artifact:install file="green.jar">
 		<pom refid="mypom"/>
 	</artifact:install>
 </target>
-	<target name="deploy">
+	<target name="deploy" depends="install">
 		<artifact:deploy file="green.jar">
 			<remoteRepository url="https://maven.jonbell.net/repository/snapshots">
 				<authentication username="${repository.username}" password="${repository.password}"/>

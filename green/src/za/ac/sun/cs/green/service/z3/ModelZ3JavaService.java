@@ -60,12 +60,12 @@ public class ModelZ3JavaService extends ModelService {
 		Tactic css = ctx.mkTactic("ctx-solver-simplify");
 		Goal g = ctx.mkGoal(true, true, false);
 		Z3GreenBridge ret = translator.getTranslationInternal();
-//		System.out.println("In: " + ret.constraints_int);
+		System.out.println("In: " + ret.constraints_int);
 		g.add(ret.constraints_int);
 		ApplyResult a = css.apply(g);
 		g = a.getSubgoals()[0];
 		ret.constraints_int = ctx.mkAnd(g.getFormulas());
-//		System.out.println("Out:" + ret.constraints_int);
+		System.out.println("Out:" + ret.constraints_int);
 		return ret;
 	}
 
