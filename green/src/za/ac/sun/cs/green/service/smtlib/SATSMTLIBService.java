@@ -139,7 +139,7 @@ public abstract class SATSMTLIBService extends SATService {
 
 		@Override
 		public void postVisit(IntConstant constant) {
-			int val = constant.getValue();
+			long val = constant.getValueLong();
 			stack.push(new TranslatorPair(transformNegative(val), IntVariable.class));
 		}
 

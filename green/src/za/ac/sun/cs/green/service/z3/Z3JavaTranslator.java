@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import za.ac.sun.cs.green.expr.ArrayVariable;
+import za.ac.sun.cs.green.expr.BVConstant;
 import za.ac.sun.cs.green.expr.Expression;
 import za.ac.sun.cs.green.expr.IntConstant;
 import za.ac.sun.cs.green.expr.IntVariable;
@@ -27,6 +28,7 @@ import za.ac.sun.cs.green.util.NotSatException;
 
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.ArrayExpr;
+import com.microsoft.z3.BitVecExpr;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
@@ -104,7 +106,16 @@ public class Z3JavaTranslator extends Visitor {
 	@Override
 	public void postVisit(IntConstant constant) {			
 		try {
-			stack.push(context.mkInt(constant.getValue()));
+			stack.push(context.mkInt(constant.getValueLong()));
+		} catch (Z3Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void postVisit(BVConstant constant) {			
+		try {
+			stack.push(context.mkBV(constant.getValue(), constant.getSize()));
 		} catch (Z3Exception e) {
 			e.printStackTrace();
 		}
@@ -312,6 +323,10 @@ public class Z3JavaTranslator extends Visitor {
 						throw new NotSatException();
 					stack.push(exp);
 				}
+				else if(r instanceof BitVecExpr && l instanceof BitVecExpr)
+				{
+					stack.push(context.mkBVSLE((BitVecExpr) l, (BitVecExpr) r));
+				}
 				else
 					stack.push(context.mkLe((ArithExpr) l, (ArithExpr) r));
 				break;
@@ -434,8 +449,14 @@ public class Z3JavaTranslator extends Visitor {
 			case EQUALS:
 				stack.push(context.mkEq(l, r));
 				break;
-			case CONCAT:
-				stack.push(context.mkConcat((SeqExpr) l,(SeqExpr) r));
+			case BIT_CONCAT:
+				stack.push(context.mkConcat((BitVecExpr) l,(BitVecExpr) r));
+				break;
+			case I2BV:
+				stack.push(context.mkInt2BV(operation.getImmediate1(), (IntExpr) l));
+				break;
+			case EXTRACT:
+				stack.push(context.mkExtract(operation.getImmediate1(), operation.getImmediate2(), (BitVecExpr)l));
 				break;
 			case SUBSTRING:
 				stack.push(context.mkExtract((SeqExpr)l, (IntExpr) r, (IntExpr) o));
@@ -473,6 +494,9 @@ public class Z3JavaTranslator extends Visitor {
 				break;
 			case BIT_XOR:
 				stack.push(context.mkBV2Int(context.mkBVXOR(context.mkInt2BV(32, (IntExpr)l), context.mkInt2BV(32, (IntExpr)r)), true));
+				break;
+			case BV2I:
+				stack.push(context.mkBV2Int((BitVecExpr)l, true));
 				break;
 			default:
 				throw new TranslatorUnsupportedOperation(

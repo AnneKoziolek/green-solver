@@ -6,13 +6,21 @@ public class IntConstant extends Constant {
 	 * 
 	 */
 	private static final long serialVersionUID = 1218090840820645022L;
-	private final int value;
+	private final long value;
 
 	public IntConstant(final int value) {
+		throw new UnsupportedOperationException();
+	}
+
+	public IntConstant(final long value) {
 		this.value = value;
 	}
 
 	public final int getValue() {
+		throw new UnsupportedOperationException();
+	}
+
+	public final long getValueLong() {
 		return value;
 	}
 
@@ -46,12 +54,12 @@ public class IntConstant extends Constant {
 
 	@Override
 	public int hashCode() {
-		return value;
+		return (int) (value^(value>>>32));
 	}
 
 	@Override
 	public String toString() {
-		return Integer.toString(value);
+		return Long.toString(value);
 	}
 
 }

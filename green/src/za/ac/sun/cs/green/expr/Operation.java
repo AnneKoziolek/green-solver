@@ -39,7 +39,6 @@ public class Operation extends Expression {
 		SHIFTL("<<", 2, Fix.INFIX),
 		SHIFTR(">>", 2, Fix.INFIX),
 		SHIFTUR(">>>", 2, Fix.INFIX),
-		BIT_CONCAT("BIT_CONCAT", 2, Fix.PREFIX),
 		SIN("SIN", 1),
 		COS("COS", 1),
 		TAN("TAN", 1),
@@ -52,6 +51,11 @@ public class Operation extends Expression {
 		EXP("EXP", 1),
 		POWER("POWER", 1),
 		SQRT("SQRT", 1),
+		// BV operations
+		EXTRACT("EXTRACT", 1),
+		I2BV("I2BV", 1),
+		BV2I("BV2I", 1),
+		BIT_CONCAT("BIT_CONCAT", 2, Fix.PREFIX),
 		// String Operations
 		SUBSTRING("SUBSTRING", 3, Fix.POSTFIX),
 		CONCAT("CONCAT", 2, Fix.POSTFIX),
@@ -127,9 +131,9 @@ public class Operation extends Expression {
 
 	}
 
-	public static final IntConstant ZERO = new IntConstant(0);
+	public static final IntConstant ZERO = new IntConstant(0L);
 
-	public static final IntConstant ONE = new IntConstant(1);
+	public static final IntConstant ONE = new IntConstant(1L);
 
 	public static final Expression FALSE = new Operation(Operation.Operator.EQ, ZERO, ONE);
 
@@ -137,11 +141,29 @@ public class Operation extends Expression {
 
 	private final Operator operator;
 
+	private final int immediate1, immediate2;
+
 	private final Expression[] operands;
 
 	public Operation(final Operator operator, Expression... operands) {
 		this.operator = operator;
 		this.operands = operands;
+		this.immediate1 = 0;
+		this.immediate2 = 0;
+	}
+
+	public Operation(final Operator operator, int immediate, Expression... operands) {
+		this.operator = operator;
+		this.operands = operands;
+		this.immediate1 = immediate;
+		this.immediate2 = 0;
+	}
+
+	public Operation(final Operator operator, int immediate1, int immediate2, Expression... operands) {
+		this.operator = operator;
+		this.operands = operands;
+		this.immediate1 = immediate1;
+		this.immediate2 = immediate2;
 	}
 
 	public Operator getOperator() {
@@ -184,6 +206,14 @@ public class Operation extends Expression {
 		} else {
 			return operands[index];
 		}
+	}
+
+	public int getImmediate1() {
+		return this.immediate1;
+	}
+
+	public int getImmediate2() {
+		return this.immediate2;
 	}
 
 	@Override

@@ -13,6 +13,10 @@ public abstract class Visitor {
 		preVisit((Constant) intConstant);
 	}
 
+	public void preVisit(BVConstant bvConstant) throws VisitorException {
+		preVisit((Constant) bvConstant);
+	}
+
 	public void preVisit(IntVariable intVariable) throws VisitorException {
 		preVisit((Variable) intVariable);
 	}
@@ -50,6 +54,10 @@ public abstract class Visitor {
 
 	public void postVisit(IntConstant intConstant) throws VisitorException {
 		postVisit((Constant) intConstant);
+	}
+
+	public void postVisit(BVConstant bvConstant) throws VisitorException {
+		postVisit((Constant) bvConstant);
 	}
 
 	public void postVisit(IntVariable intVariable) throws VisitorException {
