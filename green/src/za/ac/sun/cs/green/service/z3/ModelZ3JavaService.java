@@ -57,7 +57,8 @@ public class ModelZ3JavaService extends ModelService {
 		} catch (VisitorException e1) {
 			log.log(Level.WARNING, "Error in translation to Z3"+e1.getMessage());
 		}
-		Tactic css = ctx.mkTactic("ctx-solver-simplify");
+//		Tactic css = ctx.mkTactic("ctx-solver-simplify");
+		Tactic css = ctx.mkTactic("simplify");
 		Goal g = ctx.mkGoal(true, true, false);
 		Z3GreenBridge ret = translator.getTranslationInternal();
 		System.out.println("In: " + ret.constraints_int);
