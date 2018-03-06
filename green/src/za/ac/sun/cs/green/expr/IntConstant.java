@@ -9,7 +9,7 @@ public class IntConstant extends Constant {
 	private final long value;
 
 	public IntConstant(final int value) {
-		throw new UnsupportedOperationException();
+		this.value = (long) value;
 	}
 
 	public IntConstant(final long value) {
