@@ -13,6 +13,7 @@ import java.util.Stack;
 
 import za.ac.sun.cs.green.expr.ArrayVariable;
 import za.ac.sun.cs.green.expr.BVConstant;
+import za.ac.sun.cs.green.expr.BoolConstant;
 import za.ac.sun.cs.green.expr.Expression;
 import za.ac.sun.cs.green.expr.IntConstant;
 import za.ac.sun.cs.green.expr.IntVariable;
@@ -116,6 +117,15 @@ public class Z3JavaTranslator extends Visitor {
 	public void postVisit(BVConstant constant) {			
 		try {
 			stack.push(context.mkBV(constant.getValue(), constant.getSize()));
+		} catch (Z3Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void postVisit(BoolConstant constant) {			
+		try {
+			stack.push(context.mkBool(constant.getValue()));
 		} catch (Z3Exception e) {
 			e.printStackTrace();
 		}

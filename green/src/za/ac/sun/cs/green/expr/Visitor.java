@@ -60,6 +60,10 @@ public abstract class Visitor {
 		postVisit((Constant) bvConstant);
 	}
 
+	public void postVisit(BoolConstant constant) throws VisitorException {
+		postVisit((Constant) constant);
+	}
+
 	public void postVisit(IntVariable intVariable) throws VisitorException {
 		postVisit((Variable) intVariable);
 	}
