@@ -97,7 +97,7 @@ public class ModelZ3JavaService extends ModelService {
 				for(Expr z3Var : data.z3vars) {
 					Expr z3Val = model.evaluate(z3Var, false);
 					Object val = null;
-					if (z3Val.isIntNum()) {
+					if (z3Val.isIntNum() || z3Val.isBV()) {
 						val = Integer.parseInt(z3Val.toString());
 					} else if (z3Val.isRatNum()) {
 						val = Double.parseDouble(z3Val.toString());

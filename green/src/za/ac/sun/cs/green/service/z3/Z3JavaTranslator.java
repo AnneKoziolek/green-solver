@@ -13,6 +13,7 @@ import java.util.Stack;
 
 import za.ac.sun.cs.green.expr.ArrayVariable;
 import za.ac.sun.cs.green.expr.BVConstant;
+import za.ac.sun.cs.green.expr.BVVariable;
 import za.ac.sun.cs.green.expr.BoolConstant;
 import za.ac.sun.cs.green.expr.Expression;
 import za.ac.sun.cs.green.expr.IntConstant;
@@ -30,6 +31,7 @@ import za.ac.sun.cs.green.util.NotSatException;
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.ArrayExpr;
 import com.microsoft.z3.BitVecExpr;
+import com.microsoft.z3.BitVecNum;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
@@ -185,6 +187,20 @@ public class Z3JavaTranslator extends Visitor {
 		}
 		stack.push(v);
 	}
+	@Override
+	public void postVisit(BVVariable variable) {
+		Expr v = v2e.get(variable);
+		if (v == null) {
+			Integer size = variable.getSize();
+			try {
+				v = context.mkBVConst(variable.getName(), size);
+			} catch (Z3Exception e) {
+				e.printStackTrace();
+			}
+			v2e.put(variable, v);
+		}
+		stack.push(v);
+	}
 
 	@Override
 	public void postVisit(RealVariable variable) {
@@ -251,6 +267,16 @@ public class Z3JavaTranslator extends Visitor {
 					//comparing a string to a single char
 					stack.push(context.mkEq(r, context.mkString(new String(new char[]{(char) ((IntNum)l).getInt()}))));
 				}
+				else if(l instanceof BitVecExpr && r instanceof IntNum)
+				{
+					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					stack.push(context.mkEq(l, r));
+				}
+				else if(r instanceof BitVecExpr && l instanceof IntNum)
+				{
+					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+					stack.push(context.mkEq(l, r));
+				}
 				else
 					stack.push(context.mkEq(l, r));
 				break;
@@ -264,6 +290,11 @@ public class Z3JavaTranslator extends Visitor {
 				{
 					//comparing a string to a single char
 					stack.push(context.mkNot(context.mkEq(r, context.mkString(new String(new char[]{(char) ((IntNum)l).getInt()})))));
+				}
+				else if(l instanceof BitVecExpr && r instanceof IntNum)
+				{
+					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					stack.push(context.mkNot(context.mkEq(l, r)));
 				}
 				else
 					stack.push(context.mkNot(context.mkEq(l, r)));
@@ -333,7 +364,12 @@ public class Z3JavaTranslator extends Visitor {
 						throw new NotSatException();
 					stack.push(exp);
 				}
-				else if(r instanceof BitVecExpr && l instanceof BitVecExpr)
+				else if(l instanceof BitVecExpr && r instanceof IntNum)
+				{
+					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					stack.push(context.mkBVSLE((BitVecExpr) l, (BitVecExpr) r));
+				}
+				else if(l instanceof BitVecExpr && r instanceof BitVecExpr)
 				{
 					stack.push(context.mkBVSLE((BitVecExpr) l, (BitVecExpr) r));
 				}
@@ -371,8 +407,13 @@ public class Z3JavaTranslator extends Visitor {
 						throw new NotSatException();
 					stack.push(exp);
 				}
+				else if(l instanceof BitVecExpr && r instanceof IntNum)
+				{
+					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					stack.push(context.mkBVSGT((BitVecExpr) l, (BitVecExpr) r));
+				}
 				else
-				stack.push(context.mkGt((ArithExpr) l, (ArithExpr) r));
+					stack.push(context.mkGt((ArithExpr) l, (ArithExpr) r));
 				break;
 			case GE:
 				if(r instanceof SeqExpr && l instanceof IntNum)
@@ -405,6 +446,11 @@ public class Z3JavaTranslator extends Visitor {
 						throw new NotSatException();
 					stack.push(exp);
 				}
+				else if(l instanceof BitVecExpr && r instanceof IntNum)
+				{
+					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					stack.push(context.mkBVSGE((BitVecExpr) l, (BitVecExpr) r));
+				}
 				else
 					stack.push(context.mkGe((ArithExpr) l, (ArithExpr) r));
 				break;
@@ -421,13 +467,22 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkITE((BoolExpr) l, r, o));
 				break;
 			case ADD:
-				stack.push(context.mkAdd((ArithExpr) l, (ArithExpr) r));
+//				stack.push(context.mkAdd((ArithExpr) l, (ArithExpr) r));
+				if (l instanceof IntNum && r instanceof BitVecExpr)
+					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+				stack.push(context.mkBVAdd((BitVecExpr) l, (BitVecExpr) r));
 				break;
 			case SUB:
-				stack.push(context.mkSub((ArithExpr) l, (ArithExpr) r));
+//				stack.push(context.mkSub((ArithExpr) l, (ArithExpr) r));
+				if (l instanceof BitVecExpr && r instanceof IntNum)
+					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+				stack.push(context.mkBVSub((BitVecExpr) l, (BitVecExpr) r));
 				break;
 			case MUL:
-				stack.push(context.mkMul((ArithExpr) l, (ArithExpr) r));
+//				stack.push(context.mkMul((ArithExpr) l, (ArithExpr) r));
+				if (l instanceof IntNum && r instanceof BitVecExpr)
+					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+				stack.push(context.mkBVMul((BitVecExpr) l, (BitVecExpr) r));
 				break;
 			case DIV:
 				stack.push(context.mkDiv((ArithExpr) l, (ArithExpr) r));
@@ -494,10 +549,14 @@ public class Z3JavaTranslator extends Visitor {
 					stack.push(context.mkAt((SeqExpr)l, (IntExpr) r));
 				break;
 			case BIT_OR:
-				stack.push(context.mkBV2Int(context.mkBVOR(context.mkInt2BV(32, (IntExpr)l), context.mkInt2BV(32, (IntExpr)r)), true));
+				if (l instanceof BitVecExpr && r instanceof IntNum)
+					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+				stack.push(context.mkBVOR((BitVecExpr)l, (BitVecExpr)r));
 				break;
 			case BIT_AND:
-				stack.push(context.mkBV2Int(context.mkBVAND(context.mkInt2BV(32, (IntExpr)l), context.mkInt2BV(32, (IntExpr)r)), true));
+				if (l instanceof BitVecExpr && r instanceof IntNum)
+					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+				stack.push(context.mkBVAND((BitVecExpr)l, (BitVecExpr)r));
 				break;
 			case BIT_NOT:
 				stack.push(context.mkBV2Int(context.mkBVNot(context.mkInt2BV(32, (IntExpr)l)), true));
@@ -539,8 +598,10 @@ public class Z3JavaTranslator extends Visitor {
 			BoolExpr ret = translator.getTranslationInternal().constraints_int;
 //			System.out.println("Before charat nonsense: " + ret);
 
-			metaConstraints.accept(translator);
-			ret = ctx.mkAnd(ret,translator.getTranslationInternal().constraints_int);
+			if (metaConstraints != null) {
+				metaConstraints.accept(translator);
+				ret = ctx.mkAnd(ret,translator.getTranslationInternal().constraints_int);
+			}
 //			System.out.println("With constraints "+ ret);
 			for(String s : charAts)
 			{
