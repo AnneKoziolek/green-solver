@@ -330,6 +330,11 @@ public class Z3JavaTranslator extends Visitor {
 						throw new NotSatException();
 					stack.push(exp);
 				}
+				else if(l instanceof BitVecExpr && r instanceof IntNum)
+				{
+					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					stack.push(context.mkBVSLT((BitVecExpr) l, (BitVecExpr) r));
+				}
 				else
 					stack.push(context.mkLt((ArithExpr) l, (ArithExpr) r));
 				break;
@@ -470,6 +475,8 @@ public class Z3JavaTranslator extends Visitor {
 //				stack.push(context.mkAdd((ArithExpr) l, (ArithExpr) r));
 				if (l instanceof IntNum && r instanceof BitVecExpr)
 					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+				else if (r instanceof IntNum && l instanceof BitVecExpr)
+					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
 				stack.push(context.mkBVAdd((BitVecExpr) l, (BitVecExpr) r));
 				break;
 			case SUB:
@@ -559,7 +566,7 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkBVAND((BitVecExpr)l, (BitVecExpr)r));
 				break;
 			case BIT_NOT:
-				stack.push(context.mkBV2Int(context.mkBVNot(context.mkInt2BV(32, (IntExpr)l)), true));
+				stack.push(context.mkBVNot((BitVecExpr)l));
 				break;
 			case BIT_XOR:
 				stack.push(context.mkBV2Int(context.mkBVXOR(context.mkInt2BV(32, (IntExpr)l), context.mkInt2BV(32, (IntExpr)r)), true));
