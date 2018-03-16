@@ -286,7 +286,10 @@ public class Operation extends Expression {
 				sb.append(operands[0].toString());
 			} else {
 				sb.append('(');
-				sb.append(operands[0].toString());
+				if(operands[0] == null)
+					sb.append("NULL!");
+				else
+					sb.append(operands[0].toString());
 				sb.append(')');
 			}
 			sb.append(operator.toString());
@@ -294,7 +297,10 @@ public class Operation extends Expression {
 				sb.append(operands[1].toString());
 			} else {
 				sb.append('(');
-				sb.append(operands[1].toString());
+				if(operands[1] == null)
+					sb.append("NULL!");
+				else
+					sb.append(operands[1].toString());
 				sb.append(')');
 			}
 		} else if (arity == 1 && fix == Fix.INFIX) {
