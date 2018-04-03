@@ -52,6 +52,7 @@ public class Z3JavaTranslator extends Visitor {
 
 	private List<BoolExpr> charAtHacks = null;
 
+	private Sort bvsort = null;
 	
 	private Map<Variable, Expr> v2e = null;
 
@@ -118,7 +119,11 @@ public class Z3JavaTranslator extends Visitor {
 	@Override
 	public void postVisit(BVConstant constant) {			
 		try {
-			stack.push(context.mkBV(constant.getValue(), constant.getSize()));
+			BitVecNum bv = context.mkBV(constant.getValue(), constant.getSize());
+			if (bvsort == null)
+				bvsort = bv.getSort();
+
+			stack.push(bv);
 		} catch (Z3Exception e) {
 			e.printStackTrace();
 		}
@@ -159,13 +164,7 @@ public class Z3JavaTranslator extends Visitor {
 	public void postVisit(Variable variable) throws VisitorException {
 		if(variable instanceof ArrayVariable)
 		{
-			Expr v = v2e.get(variable);
-			if(v == null)
-			{
-				v = context.mkConst(variable.getName(), context.mkArraySort(context.getIntSort(), context.getIntSort()));
-				v2e.put(variable, v);
-			}
-			stack.push(v);
+			throw new Error();
 		}
 	}
 	@Override
@@ -199,6 +198,8 @@ public class Z3JavaTranslator extends Visitor {
 			}
 			v2e.put(variable, v);
 		}
+		if (bvsort == null)
+			bvsort = v.getSort();
 		stack.push(v);
 	}
 
@@ -222,6 +223,35 @@ public class Z3JavaTranslator extends Visitor {
 		stack.push(v);
 	}
 	
+	@Override
+	public void postVisit(ArrayVariable variable) throws VisitorException {
+		Expr v = v2e.get(variable);
+		if (v == null)
+		{
+			try {
+				Sort range;
+				String s = variable.getType().getName();
+				switch (s) {
+					case "boolean":
+					case "byte":
+					case "char":
+					case "int":
+					case "short":
+					case "long":
+						range = bvsort;
+						break;
+					default:
+						throw new Error("Not implemented");
+				}
+				v = context.mkConst(variable.getName(), context.mkArraySort(bvsort, range));
+			} catch (Z3Exception e) {
+				e.printStackTrace();
+				throw e;
+			}
+			v2e.put(variable, v);
+		}
+		stack.push(v);
+	}
 	@Override
 	public void postVisit(Operation operation) throws VisitorException {
 		Expr l = null;

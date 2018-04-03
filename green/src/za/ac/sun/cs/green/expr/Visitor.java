@@ -96,4 +96,8 @@ public abstract class Visitor {
 		postVisit((Expression) variable);
 	}
 
+	public void postVisit(ArrayVariable variable) throws VisitorException {
+		postVisit((Expression) variable);
+	}
+
 }
