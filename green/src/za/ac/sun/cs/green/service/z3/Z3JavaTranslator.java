@@ -51,8 +51,6 @@ public class Z3JavaTranslator extends Visitor {
 	private List<BoolExpr> domains = null;
 
 	private List<BoolExpr> charAtHacks = null;
-
-	private Sort bvsort = null;
 	
 	private Map<Variable, Expr> v2e = null;
 
@@ -120,9 +118,6 @@ public class Z3JavaTranslator extends Visitor {
 	public void postVisit(BVConstant constant) {			
 		try {
 			BitVecNum bv = context.mkBV(constant.getValue(), constant.getSize());
-			if (bvsort == null)
-				bvsort = bv.getSort();
-
 			stack.push(bv);
 		} catch (Z3Exception e) {
 			e.printStackTrace();
@@ -198,8 +193,6 @@ public class Z3JavaTranslator extends Visitor {
 			}
 			v2e.put(variable, v);
 		}
-		if (bvsort == null)
-			bvsort = v.getSort();
 		stack.push(v);
 	}
 
@@ -233,17 +226,25 @@ public class Z3JavaTranslator extends Visitor {
 				String s = variable.getType().getName();
 				switch (s) {
 					case "boolean":
+						range = context.mkBoolSort();
+						break;
 					case "byte":
-					case "char":
-					case "int":
+						range = context.mkBitVecSort(8);
+						break;
 					case "short":
+					case "char":
+						range = context.mkBitVecSort(16);
+						break;
+					case "int":
+						range = context.mkBitVecSort(32);
+						break;
 					case "long":
-						range = bvsort;
+						range = context.mkBitVecSort(64);
 						break;
 					default:
 						throw new Error("Not implemented");
 				}
-				v = context.mkConst(variable.getName(), context.mkArraySort(bvsort, range));
+				v = context.mkArrayConst(variable.getName(), context.mkBitVecSort(32), range);
 			} catch (Z3Exception e) {
 				e.printStackTrace();
 				throw e;
@@ -307,6 +308,14 @@ public class Z3JavaTranslator extends Visitor {
 					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
 					stack.push(context.mkEq(l, r));
 				}
+				else if(l instanceof BoolExpr && r instanceof IntNum)
+				{
+					stack.push(context.mkEq(l, context.mkNot(context.mkEq(r, context.mkInt(0)))));
+				}
+				else if(r instanceof BoolExpr && l instanceof IntNum)
+				{
+					stack.push(context.mkEq(r, context.mkNot(context.mkEq(l, context.mkInt(0)))));
+				}
 				else
 					stack.push(context.mkEq(l, r));
 				break;
@@ -325,6 +334,10 @@ public class Z3JavaTranslator extends Visitor {
 				{
 					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
 					stack.push(context.mkNot(context.mkEq(l, r)));
+				}
+				else if(l instanceof BoolExpr && r instanceof IntNum)
+				{
+					stack.push(context.mkNot(context.mkEq(l, context.mkNot(context.mkEq(r, context.mkInt(0))))));
 				}
 				else
 					stack.push(context.mkNot(context.mkEq(l, r)));
@@ -603,6 +616,10 @@ public class Z3JavaTranslator extends Visitor {
 				break;
 			case BV2I:
 				stack.push(context.mkBV2Int((BitVecExpr)l, true));
+				break;
+			case STORE:
+				o = stack.pop();
+				stack.push(context.mkStore((ArrayExpr)o, l, r));
 				break;
 			default:
 				throw new TranslatorUnsupportedOperation(
