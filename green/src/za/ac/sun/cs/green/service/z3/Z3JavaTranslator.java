@@ -26,6 +26,7 @@ import za.ac.sun.cs.green.expr.StringVariable;
 import za.ac.sun.cs.green.expr.Variable;
 import za.ac.sun.cs.green.expr.Visitor;
 import za.ac.sun.cs.green.expr.VisitorException;
+import za.ac.sun.cs.green.expr.Operation.Operator;
 import za.ac.sun.cs.green.util.NotSatException;
 
 import com.microsoft.z3.ArithExpr;
@@ -670,18 +671,38 @@ public class Z3JavaTranslator extends Visitor {
 		public String toString() {
 			return "Z3GreenBridge [charAts=" + charAts + ", constraints=" + constraints + ", metaConstraints=" + metaConstraints + "]";
 		}
-		public BoolExpr convertToZ3(Context ctx) throws VisitorException {
+	
+		private void splitDisjunctions(Expression expr, Set<Expression> acc) {
+			if (expr instanceof Operation) {
+				Operation op = (Operation) expr;
+				if (op.getOperator() == Operator.AND) {
+					acc.add(op.getOperand(1));
+					splitDisjunctions(op.getOperand(0), acc);
+					return;
+				}
+			}
+			acc.add(expr);
+		}
+		public Map<Expression, BoolExpr> convertToZ3(Context ctx) throws VisitorException {
 			//First convert the regular constraints
 			Z3JavaTranslator translator = new Z3JavaTranslator(ctx);
+			Set<Expression> disjunctions = new HashSet<>();
+			splitDisjunctions(constraints, disjunctions);
 			constraints.accept(translator);
+			Map<Expression, BoolExpr> ret = new HashMap<>();
+			
+			for (Expression e : disjunctions) {
+				e.accept(translator);
+				ret.put(e, translator.getTranslationInternal().constraints_int);
+			}
+//			System.out.println("Before charat nonsense: " + ret);
+
 			Map<Variable,Expr> v2e = translator.v2e;
 			z3vars = v2e.values();
-			BoolExpr ret = translator.getTranslationInternal().constraints_int;
-//			System.out.println("Before charat nonsense: " + ret);
 
 			if (metaConstraints != null) {
 				metaConstraints.accept(translator);
-				ret = ctx.mkAnd(ret,translator.getTranslationInternal().constraints_int);
+				ret.put(metaConstraints, translator.getTranslationInternal().constraints_int);
 			}
 //			System.out.println("With constraints "+ ret);
 			for(String s : charAts)
@@ -707,7 +728,7 @@ public class Z3JavaTranslator extends Visitor {
 				}
 //				System.out.println(charToInt);
 //				System.out.println(strCharAtVar);
-				ret = ctx.mkAnd(ret, ctx.mkEq(charToInt, strCharAtVar));
+				ret.put(new StringVariable(s), ctx.mkEq(charToInt, strCharAtVar));
 			}
 			return ret;
 		}

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
@@ -24,6 +25,7 @@ import com.microsoft.z3.Z3Exception;
 import za.ac.sun.cs.green.Instance;
 import za.ac.sun.cs.green.Green;
 import za.ac.sun.cs.green.expr.ArrayVariable;
+import za.ac.sun.cs.green.expr.Expression;
 import za.ac.sun.cs.green.expr.StringVariable;
 import za.ac.sun.cs.green.expr.Variable;
 import za.ac.sun.cs.green.expr.VisitorException;
@@ -72,9 +74,9 @@ public class ModelZ3JavaService extends ModelService {
 
 	public HashMap<String, Object> solve(Z3GreenBridge data) {
 		HashMap<String, Object> results = new HashMap<String, Object>();
-		BoolExpr expr = null;
+		Map<Expression, BoolExpr> map;
 		try {
-			expr = data.convertToZ3(ctx);
+			map = data.convertToZ3(ctx);
 		} catch (VisitorException e1) {
 			log.log(Level.WARNING, "Error in translation to Z3" + e1.getMessage());
 			throw new RuntimeException(e1);
@@ -85,7 +87,10 @@ public class ModelZ3JavaService extends ModelService {
 				Z3solver = ctx.mkSolver();
 			else
 				Z3solver.reset();
-			Z3solver.add(expr);
+
+			for (Entry<Expression, BoolExpr> e : map.entrySet())
+				Z3solver.assertAndTrack(e.getValue(), ctx.mkBoolConst(e.getKey().toString()));
+
 		} catch (Z3Exception e1) {
 			log.log(Level.WARNING, "Error in Z3"+e1.getMessage());
 		}
