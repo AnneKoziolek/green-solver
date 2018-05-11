@@ -567,6 +567,25 @@ public class Z3JavaTranslator extends Visitor {
 					if (bvl.getSortSize() == 64 && bvr.getSortSize() < 64)
 						r = context.mkSignExt(bvl.getSortSize() - bvr.getSortSize(), bvr);
 				}
+
+				{
+					// Adjust for Java shift-left semantics
+					// See https://docs.oracle.com/javase/specs/jls/se8/html/jls-15.html#jls-15.19
+					BitVecExpr bvl = (BitVecExpr)l;
+					BitVecExpr bvr = (BitVecExpr)r;
+
+					switch (bvl.getSortSize()) {
+						case 64:
+							r = context.mkBVAND(bvr, context.mkBV(0x3f, 64));
+							break;
+						case 32:
+							r = context.mkBVAND(bvr, context.mkBV(0x3f, 32));
+							break;
+						default:
+							throw new Error("SHL on less than int");
+					}
+				}
+				
 				stack.push(context.mkBVSHL((BitVecExpr)l, (BitVecExpr)r));
 				break;
 			case SHIFTR:
