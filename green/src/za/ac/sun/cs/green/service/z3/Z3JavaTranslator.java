@@ -514,6 +514,8 @@ public class Z3JavaTranslator extends Visitor {
 					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
 					stack.push(context.mkBVSGE((BitVecExpr) l, (BitVecExpr) r));
 				}
+				else if (l instanceof BitVecExpr && r instanceof BitVecExpr)
+					stack.push(context.mkBVSGE((BitVecExpr) l, (BitVecExpr) r));
 				else
 					stack.push(context.mkGe((ArithExpr) l, (ArithExpr) r));
 				break;
@@ -648,6 +650,9 @@ public class Z3JavaTranslator extends Visitor {
 			case STORE:
 				o = stack.pop();
 				stack.push(context.mkStore((ArrayExpr)o, l, r));
+				break;
+			case SIGN_EXT:
+				stack.push(context.mkSignExt(operation.getImmediate1(), (BitVecExpr)l));
 				break;
 			default:
 				throw new TranslatorUnsupportedOperation(

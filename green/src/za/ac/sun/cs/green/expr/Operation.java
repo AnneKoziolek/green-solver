@@ -56,6 +56,7 @@ public class Operation extends Expression {
 		I2BV("I2BV", 1),
 		BV2I("BV2I", 1),
 		BIT_CONCAT("BIT_CONCAT", 2, Fix.PREFIX),
+		SIGN_EXT("SIGN_EXTEND", 1, Fix.PREFIX),
 		// String Operations
 		SUBSTRING("SUBSTRING", 3, Fix.POSTFIX),
 		CONCAT("CONCAT", 2, Fix.POSTFIX),
