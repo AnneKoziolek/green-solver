@@ -19,6 +19,12 @@ public class RealVariable extends Variable {
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
 	}
+	
+	public RealVariable(String name) {
+		super(name);
+		this.lowerBound = Double.NEGATIVE_INFINITY;
+		this.upperBound = Double.POSITIVE_INFINITY;
+	}
 
 	public Double getLowerBound() {
 		return lowerBound;

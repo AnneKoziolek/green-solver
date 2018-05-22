@@ -51,12 +51,14 @@ public class Operation extends Expression {
 		EXP("EXP", 1),
 		POWER("POWER", 1),
 		SQRT("SQRT", 1),
+		I2R("I2R", 1),
 		// BV operations
 		EXTRACT("EXTRACT", 1),
 		I2BV("I2BV", 1),
 		BV2I("BV2I", 1),
 		BIT_CONCAT("BIT_CONCAT", 2, Fix.PREFIX),
 		SIGN_EXT("SIGN_EXTEND", 1, Fix.PREFIX),
+		ZERO_EXT("ZERO_EXTEND", 1, Fix.PREFIX),
 		// String Operations
 		SUBSTRING("SUBSTRING", 3, Fix.POSTFIX),
 		CONCAT("CONCAT", 2, Fix.POSTFIX),
