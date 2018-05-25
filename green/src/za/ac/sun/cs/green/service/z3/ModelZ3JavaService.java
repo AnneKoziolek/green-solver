@@ -319,16 +319,11 @@ public class ModelZ3JavaService extends ModelService {
 
 		@Override
 		public int compare(Expression e1, Expression e2) {
-			if (!( e1 instanceof Operation && e2 instanceof Operation)) 
+			if (!( e1 instanceof Operation && e1 instanceof Operation)) 
 				return e1.toString().compareTo(e2.toString());
 			
 			Operation o1 = (Operation)e1;
-			Operation o2; // = (Operation)e2;
-			try {
-				o2 = (Operation)e2;
-			} catch (RuntimeException e) {
-				throw e;
-			}
+			Operation o2 = (Operation)e2;
 
 			Variable v1 = getVarFromOperation(o1);
 			Variable v2 = getVarFromOperation(o2);
