@@ -24,6 +24,7 @@ import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
 import com.microsoft.z3.Model;
+import com.microsoft.z3.RatNum;
 import com.microsoft.z3.Solver;
 import com.microsoft.z3.Sort;
 import com.microsoft.z3.Status;
@@ -205,7 +206,8 @@ public class ModelZ3JavaService extends ModelService {
 							val = l.intValue();
 						}
 					} else if (z3Val.isRatNum()) {
-						val = Double.parseDouble(z3Val.toString());
+						RatNum rt = (RatNum) z3Val;
+						val = ((double)rt.getNumerator().getInt64()) / ((double)rt.getDenominator().getInt64());
 					} else {
 						//Must be string?
 						String sval = z3Val.toString();
