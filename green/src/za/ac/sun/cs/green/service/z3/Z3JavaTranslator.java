@@ -581,21 +581,37 @@ public class Z3JavaTranslator extends Visitor {
 				}
 				break;
 			case DIV:
-				if (l.isBV() && r.isBV())
+				if (l.isBV() || r.isBV()) {
+					if (l instanceof IntNum)
+						l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+					else if (r instanceof IntNum)
+						r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					
 					stack.push(context.mkBVSDiv((BitVecExpr) l, (BitVecExpr) r));
-				else
+				} else
 					stack.push(context.mkDiv((ArithExpr) l, (ArithExpr) r));
 				break;
 			case MOD:
-				if (l.isBV() && r.isBV())
+				if (l.isBV() || r.isBV()) {
+					if (l instanceof IntNum)
+						l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+					else if (r instanceof IntNum)
+						r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					
 					stack.push(context.mkBVSMod((BitVecExpr)l, (BitVecExpr)r));
-				else
+				} else
 					stack.push(context.mkMod((IntExpr) l, (IntExpr) r));
 				break;
 			case SHIFTL:
 				if (r instanceof BitVecExpr && l instanceof IntNum)
 					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
-				else if (l instanceof BitVecExpr && r instanceof BitVecExpr) {
+				else if (l instanceof BitVecExpr || r instanceof BitVecExpr) {
+
+					if (l instanceof IntNum)
+						l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+					else if (r instanceof IntNum)
+						r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+
 					BitVecExpr bvl = (BitVecExpr)l;
 					BitVecExpr bvr = (BitVecExpr)r;
 
@@ -706,6 +722,11 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkBVNot((BitVecExpr)l));
 				break;
 			case BIT_XOR:
+				if (l instanceof IntNum)
+					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+				if (r instanceof IntNum)
+					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+
 				stack.push(context.mkBVXOR((BitVecExpr)l, (BitVecExpr)r));
 				break;
 			case BV2I:
