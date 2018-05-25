@@ -201,14 +201,14 @@ public class Z3JavaTranslator extends Visitor {
 	public void postVisit(RealVariable variable) {
 		Expr v = v2e.get(variable);
 		if (v == null) {
-			int lower = (int) (double) variable.getLowerBound();
-			int upper = (int) (double) variable.getUpperBound();
+//			long lower = (int) (double) variable.getLowerBound();
+//			long upper = (int) (double) variable.getUpperBound();
 			try {
 				v = context.mkRealConst(variable.getName());
 				// now add bounds
-				BoolExpr low  = context.mkGe((ArithExpr)v,(ArithExpr)context.mkReal(lower));
-				BoolExpr high = context.mkLe((ArithExpr)v,(ArithExpr)context.mkReal(upper));
-				domains.add(context.mkAnd(low,high));
+//				BoolExpr low  = context.mkGe((ArithExpr)v,(ArithExpr)context.mkReal(lower));
+//				BoolExpr high = context.mkLe((ArithExpr)v,(ArithExpr)context.mkReal(upper));
+//				domains.add(context.mkAnd(low,high));
 			} catch (Z3Exception e) {
 				e.printStackTrace();
 			}
