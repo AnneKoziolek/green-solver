@@ -68,14 +68,14 @@ public class ModelZ3JavaService extends ModelService {
 			log.log(Level.WARNING, "Error in translation to Z3"+e1.getMessage());
 		}
 //		Tactic css = ctx.mkTactic("ctx-solver-simplify");
-		Tactic css = ctx.mkTactic("simplify");
-		Goal g = ctx.mkGoal(true, true, false);
+//		Tactic css = ctx.mkTactic("simplify");
+//		Goal g = ctx.mkGoal(true, true, false);
 		Z3GreenBridge ret = translator.getTranslationInternal();
 //		System.out.println("In: " + ret.constraints_int);
-		g.add(ret.constraints_int);
-		ApplyResult a = css.apply(g);
-		g = a.getSubgoals()[0];
-		ret.constraints_int = ctx.mkAnd(g.getFormulas());
+//		g.add(ret.constraints_int);
+//		ApplyResult a = css.apply(g);
+//		g = a.getSubgoals()[0];
+//		ret.constraints_int = ctx.mkAnd(g.getFormulas());
 //		System.out.println("Out:" + ret.constraints_int);
 		return ret;
 	}
@@ -130,6 +130,7 @@ public class ModelZ3JavaService extends ModelService {
 			map.putAll(data.convertToZ3(ctx));
 		} catch (VisitorException e1) {
 			log.log(Level.WARNING, "Error in translation to Z3" + e1.getMessage());
+			e1.printStackTrace();
 			throw new RuntimeException(e1);
 		}
 		
@@ -318,11 +319,16 @@ public class ModelZ3JavaService extends ModelService {
 
 		@Override
 		public int compare(Expression e1, Expression e2) {
-			if (!( e1 instanceof Operation && e1 instanceof Operation)) 
+			if (!( e1 instanceof Operation && e2 instanceof Operation)) 
 				return e1.toString().compareTo(e2.toString());
 			
 			Operation o1 = (Operation)e1;
-			Operation o2 = (Operation)e2;
+			Operation o2; // = (Operation)e2;
+			try {
+				o2 = (Operation)e2;
+			} catch (RuntimeException e) {
+				throw e;
+			}
 
 			Variable v1 = getVarFromOperation(o1);
 			Variable v2 = getVarFromOperation(o2);
