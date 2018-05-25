@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.microsoft.z3.AST;
+import com.microsoft.z3.BitVecNum;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
@@ -189,8 +191,19 @@ public class ModelZ3JavaService extends ModelService {
 				for(Expr z3Var : data.z3vars) {
 					Expr z3Val = model.evaluate(z3Var, false);
 					Object val = null;
-					if (z3Val.isIntNum() || z3Val.isBV()) {
-						val = Integer.parseInt(z3Val.toString());
+					if (z3Val.isIntNum()) {
+						val = Long.parseLong(z3Val.toString());
+					} else if (z3Val.isBV()) {
+						BitVecNum bv = (BitVecNum) z3Val;
+						if (bv.getSortSize() == 64) {
+							// Long
+							BigInteger bi = bv.getBigInteger();
+							val = bi.longValue();
+						} else {
+							// Int
+							Long l = bv.getLong();
+							val = l.intValue();
+						}
 					} else if (z3Val.isRatNum()) {
 						val = Double.parseDouble(z3Val.toString());
 					} else {
