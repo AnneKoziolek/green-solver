@@ -137,6 +137,10 @@ public class ModelZ3JavaService extends ModelService {
 			throw new RuntimeException(e1);
 		}
 		
+//		for (Entry<Expression, BoolExpr> e : map.entrySet()) {
+//			System.out.println(e.getKey());
+//		}
+		
 		if (out != null) {
 
 			try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out))) {
