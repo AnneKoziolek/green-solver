@@ -18,11 +18,6 @@ public class ArrayVariable extends Variable {
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof ArrayVariable && ((ArrayVariable) object).getName().equals(getName());
-	}
-
-	@Override
 	public String toString() {
 		return getName();
 	}
