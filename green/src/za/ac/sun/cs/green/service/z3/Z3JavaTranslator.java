@@ -230,11 +230,11 @@ public class Z3JavaTranslator extends Visitor {
 						range = context.mkBoolSort();
 						break;
 					case "byte":
-						range = context.mkBitVecSort(8);
+						range = context.mkBitVecSort(32);
 						break;
 					case "short":
 					case "char":
-						range = context.mkBitVecSort(16);
+						range = context.mkBitVecSort(32);
 						break;
 					case "int":
 						range = context.mkBitVecSort(32);
