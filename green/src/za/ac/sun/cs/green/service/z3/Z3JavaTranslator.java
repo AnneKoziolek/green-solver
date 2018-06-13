@@ -103,7 +103,13 @@ public class Z3JavaTranslator extends Visitor {
 
 	@Override
 	public void postVisit(StringConstant stringConstant) throws VisitorException {
-		stack.push(context.mkString(stringConstant.getValue()));
+
+		SeqExpr expr = context.mkEmptySeq(context.mkSeqSort(context.mkBitVecSort(32)));
+		for (int i = 0 ; i < stringConstant.getValue().length() ; i++)
+			expr = context.mkConcat(expr, context.mkUnit(context.mkBV(stringConstant.getValue().charAt(i), 32)));
+
+		stack.push(expr);
+//		stack.push(context.mkString(stringConstant.getValue()));
 	}
 	
 	@Override
@@ -148,9 +154,10 @@ public class Z3JavaTranslator extends Visitor {
 		Expr v = v2e.get(stringVariable);
 		if(v == null)
 		{
-			v = context.mkConst(stringVariable.getName(), context.getStringSort());
-			if(stringVariable.observedLength > 0)
-				domains.add(context.mkLt(context.mkInt(stringVariable.observedLength), context.mkLength((SeqExpr) v)));
+			v = context.mkEmptySeq(context.mkSeqSort(context.mkBitVecSort(32)));
+//			v = context.mkConst(stringVariable.getName(), context.getStringSort());
+//			if(stringVariable.observedLength > 0)
+//				domains.add(context.mkLt(context.mkInt(stringVariable.observedLength), context.mkLength((SeqExpr) v)));
 			v2e.put(stringVariable, v);
 		}
 		stack.push(v);
@@ -311,11 +318,11 @@ public class Z3JavaTranslator extends Visitor {
 				}
 				else if(l instanceof BoolExpr && r instanceof IntNum)
 				{
-					stack.push(context.mkEq(l, context.mkNot(context.mkEq(r, context.mkInt(0)))));
+					stack.push(context.mkEq(l, context.mkBool(((IntNum)r).getInt64() != 0)));
 				}
 				else if(r instanceof BoolExpr && l instanceof IntNum)
 				{
-					stack.push(context.mkEq(r, context.mkNot(context.mkEq(l, context.mkInt(0)))));
+					stack.push(context.mkEq(context.mkBool(((IntNum)l).getInt64() != 0), r));
 				}
 				else
 					stack.push(context.mkEq(l, r));
@@ -751,6 +758,8 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkUnaryMinus((ArithExpr)l));
 				break;
 			case CONCAT:
+				if (!(r instanceof SeqExpr))
+					r = context.mkUnit(r);
 				stack.push(context.mkConcat((SeqExpr)l, (SeqExpr)r));
 				break;
 			default:
