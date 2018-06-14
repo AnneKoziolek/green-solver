@@ -363,9 +363,9 @@ public class Z3JavaTranslator extends Visitor {
 					for(char i = (char) (v +1); i <= 127; i++)
 					{
 						if(exp == null)
-							exp = context.mkEq(r, context.mkString(Character.toString(i)));
+							exp = context.mkEq(l, context.mkUnit(context.mkBV(i, 32)));
 						else
-							exp = context.mkOr(exp,context.mkEq(r, context.mkString(Character.toString(i))));
+							exp = context.mkOr(exp,context.mkEq(l, context.mkUnit(context.mkBV(i, 32))));
 					}
 					if(exp == null)
 						throw new NotSatException();
@@ -378,9 +378,9 @@ public class Z3JavaTranslator extends Visitor {
 					for(char i = 0; i < v; i++)
 					{
 						if(exp == null)
-							exp = context.mkEq(l, context.mkString(Character.toString(i)));
+							exp = context.mkEq(l, context.mkUnit(context.mkBV(i, 32)));
 						else
-							exp = context.mkOr(exp,context.mkEq(l, context.mkString(Character.toString(i))));
+							exp = context.mkOr(exp,context.mkEq(l, context.mkUnit(context.mkBV(i, 32))));
 					}
 					if(exp == null)
 						throw new NotSatException();
@@ -411,9 +411,9 @@ public class Z3JavaTranslator extends Visitor {
 					for(char i = (char) (v); i <= 127; i++)
 					{
 						if(exp == null)
-							exp = context.mkEq(r, context.mkString(Character.toString(i)));
+							exp = context.mkEq(l, context.mkUnit(context.mkBV(i, 32)));
 						else
-							exp = context.mkOr(exp,context.mkEq(r, context.mkString(Character.toString(i))));
+							exp = context.mkOr(exp,context.mkEq(l, context.mkUnit(context.mkBV(i, 32))));
 					}
 					if(exp == null)
 						throw new NotSatException();
@@ -426,9 +426,9 @@ public class Z3JavaTranslator extends Visitor {
 					for(char i = 0; i <= v; i++)
 					{
 						if(exp == null)
-							exp = context.mkEq(l, context.mkString(Character.toString(i)));
+							exp = context.mkEq(l, context.mkUnit(context.mkBV(i, 32)));
 						else
-							exp = context.mkOr(exp,context.mkEq(l, context.mkString(Character.toString(i))));
+							exp = context.mkOr(exp,context.mkEq(l, context.mkUnit(context.mkBV(i, 32))));
 					}
 					if(exp == null)
 						throw new NotSatException();
@@ -454,9 +454,9 @@ public class Z3JavaTranslator extends Visitor {
 					for(char i = 0; i < v; i++)
 					{
 						if(exp == null)
-							exp = context.mkEq(r, context.mkString(Character.toString(i)));
+							exp = context.mkEq(r, context.mkUnit(context.mkBV(i, 32)));
 						else
-							exp = context.mkOr(exp,context.mkEq(r, context.mkString(Character.toString(i))));
+							exp = context.mkOr(exp,context.mkEq(r, context.mkUnit(context.mkBV(i, 32))));
 					}
 					if(exp == null)
 						throw new NotSatException();
@@ -502,9 +502,9 @@ public class Z3JavaTranslator extends Visitor {
 					for(char i = 0; i <= v; i++)
 					{
 						if(exp == null)
-							exp = context.mkEq(r, context.mkString(Character.toString(i)));
+							exp = context.mkEq(l, context.mkUnit(context.mkBV(i, 32)));
 						else
-							exp = context.mkOr(exp,context.mkEq(r, context.mkString(Character.toString(i))));
+							exp = context.mkOr(exp,context.mkEq(l, context.mkUnit(context.mkBV(i, 32))));
 					}
 					if(exp == null)
 						throw new NotSatException();
@@ -515,12 +515,10 @@ public class Z3JavaTranslator extends Visitor {
 					int v = ((IntNum)r).getInt();
 					BoolExpr exp = null;
 					for(char i = (char) v; i <= 127; i++)
-					{
 						if(exp == null)
-							exp = context.mkEq(l, context.mkString(Character.toString(i)));
+							exp = context.mkEq(l, context.mkUnit(context.mkBV(i, 32)));
 						else
-							exp = context.mkOr(exp,context.mkEq(l, context.mkString(Character.toString(i))));
-					}
+							exp = context.mkOr(exp,context.mkEq(l, context.mkUnit(context.mkBV(i, 32))));
 					if(exp == null)
 						throw new NotSatException();
 					stack.push(exp);
@@ -676,7 +674,10 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkLength((SeqExpr) l));
 				break;
 			case SELECT:
-				stack.push(context.mkSelect((ArrayExpr) l, r));
+				if (l.isArray())
+					stack.push(context.mkSelect((ArrayExpr) l, r));
+				else // Seq
+					stack.push(context.mkAt((SeqExpr) l, (IntExpr) r));
 				break;
 			case EQUALS:
 				stack.push(context.mkEq(l, r));
