@@ -103,10 +103,17 @@ public class Z3JavaTranslator extends Visitor {
 
 	@Override
 	public void postVisit(StringConstant stringConstant) throws VisitorException {
+		
+		SeqExpr expr;
 
-		SeqExpr expr = context.mkEmptySeq(context.mkSeqSort(context.mkBitVecSort(32)));
-		for (int i = 0 ; i < stringConstant.getValue().length() ; i++)
-			expr = context.mkConcat(expr, context.mkUnit(context.mkBV(stringConstant.getValue().charAt(i), 32)));
+		if (stringConstant.getValue().isEmpty()) {
+			expr = context.mkEmptySeq(context.mkSeqSort(context.mkBitVecSort(32)));
+		} else {
+			expr = context.mkUnit(context.mkBV(stringConstant.getValue().charAt(0), 32));
+
+			for (int i = 1 ; i < stringConstant.getValue().length() ; i++)
+				expr = context.mkConcat(expr, context.mkUnit(context.mkBV(stringConstant.getValue().charAt(i), 32)));
+		}
 
 		stack.push(expr);
 //		stack.push(context.mkString(stringConstant.getValue()));
@@ -762,6 +769,9 @@ public class Z3JavaTranslator extends Visitor {
 				if (!(r instanceof SeqExpr))
 					r = context.mkUnit(r);
 				stack.push(context.mkConcat((SeqExpr)l, (SeqExpr)r));
+				break;
+			case REPLACEFIRST:
+				stack.push(context.mkReplace((SeqExpr)l, (SeqExpr)r, (SeqExpr)o));
 				break;
 			default:
 				throw new TranslatorUnsupportedOperation(
