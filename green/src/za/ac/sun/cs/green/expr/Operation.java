@@ -173,6 +173,10 @@ public class Operation extends Expression {
 		return operator;
 	}
 
+	public int getArity() {
+		return operands.length;
+	}
+
 	public Iterable<Expression> getOperands() {
 		return new Iterable<Expression>() {
 			@Override
