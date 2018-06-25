@@ -252,7 +252,7 @@ public class ModelZ3JavaService extends ModelService {
 			log.log(Level.WARNING, "Error in translation to Z3"+e1.getMessage());
 		}
 		// get context out of the translator
-		BoolExpr expr = translator.getTranslation();
+		BoolExpr expr = (BoolExpr) translator.getTranslation();
 		// model should now be in ctx
 		try {
 			Z3solver = ctx.mkSolver();

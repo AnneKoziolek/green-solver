@@ -75,20 +75,20 @@ public class Z3JavaTranslator extends Visitor {
 		ret.charAts = charAts.keySet();
 		return ret;
 	}
-	public BoolExpr getTranslation() {
-		BoolExpr result = (BoolExpr)stack.pop();
+	public Expr getTranslation() {
+		Expr result = stack.pop();
 		/* not required due to Bounder being used */
 		/* not sure why this was commented out, it is clearly wrong, with or without bounder */
 		for (BoolExpr expr : domains) {
 			try {
-				result = context.mkAnd(result,expr);
+				result = context.mkAnd((BoolExpr)result,expr);
 			} catch (Z3Exception e) {
 				e.printStackTrace();
 			}
 		}
 		for (BoolExpr expr : charAtHacks) {
 			try {
-				result = context.mkAnd(result,expr);
+				result = context.mkAnd((BoolExpr)result,expr);
 			} catch (Z3Exception e) {
 				e.printStackTrace();
 			}
