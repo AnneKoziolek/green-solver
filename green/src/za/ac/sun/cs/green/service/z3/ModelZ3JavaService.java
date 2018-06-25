@@ -65,10 +65,10 @@ public class ModelZ3JavaService extends ModelService {
 	{
 		Z3JavaTranslator translator = new Z3JavaTranslator(ctx);
 		try {
-			Set<Operation> dedup = dedup((Expression)instance.getExpression());
-			operationFromSet(dedup).accept(translator);
+			((Expression)instance.getExpression()).accept(translator);
 		} catch (VisitorException e1) {
 			log.log(Level.WARNING, "Error in translation to Z3"+e1.getMessage());
+			throw new Error(e1);
 		}
 //		Tactic css = ctx.mkTactic("ctx-solver-simplify");
 //		Tactic css = ctx.mkTactic("simplify");
@@ -83,52 +83,9 @@ public class ModelZ3JavaService extends ModelService {
 		return ret;
 	}
 
-	// Remove duplicated expressions
-	private static Set<Operation> dedup(Expression constraints)
-	{
-		HashSet<Operation> ret = new HashSet<>();
-
-		// Expression has the form: ((((exp) AND exp) ...) AND  exp)
-		// Extract each individual expression
-		Expression e = constraints;
-		while (true)
-		{
-			Operation op = (Operation)e;
-			if (op.getOperator() == Operator.AND)
-			{
-				ret.add((Operation)op.getOperand(1));
-				e = op.getOperand(0);
-			} else {
-				ret.add(op);
-				break;
-			}
-		}
-		
-		return ret;
-	}
-
-	private static Operation operationFromSet(Set<Operation> constraints)
-	{
-		Operation ret = null;
-		
-		for (Operation op: constraints)
-		{
-			if (ret == null)
-				ret = op;
-			else
-				ret = new Operation(Operator.AND, ret, op);
-		}
-		
-		return ret;
-	}
-	
 	public HashMap<String, Object> solve(Z3GreenBridge data) {
-		return solve(data, null);
-	}
-
-	public HashMap<String, Object> solve(Z3GreenBridge data, OutputStream out) {
 		HashMap<String, Object> results = new HashMap<String, Object>();
-		TreeMap<Expression, BoolExpr> map = new TreeMap<>(new CommonOperationComparator());
+		HashMap<Expression, BoolExpr> map = new HashMap<>();
 		try {
 			map.putAll(data.convertToZ3(ctx));
 		} catch (VisitorException e1) {
@@ -141,41 +98,6 @@ public class ModelZ3JavaService extends ModelService {
 //			System.out.println(e.getKey());
 //		}
 		
-		if (out != null) {
-
-			try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out))) {
-				// Declare variables
-				HashSet<String> seen = new HashSet<>();
-				for (Expr v : data.z3vars) {
-					if (seen.add(v.toString())) {
-						Sort s = v.getSort();
-						bw.write("(declare-const " + v + " " + s + ")\n");
-					}
-				}
-				
-				// Print constraints
-				int i = 0;
-				for (Entry<Expression, BoolExpr> entry : map.entrySet()) {
-					// Print constraint number as a comment
-					bw.write("; c" + (i++) + "\n");
-
-					// Print Knarr constraint as comment
-					bw.write("; ");
-					bw.write(entry.getKey().toString());
-					bw.write("\n");
-					
-					// Assert constraint
-					bw.write("(assert (!" + entry.getValue().toString() + " :named c" + i + "))");
-					bw.write("\n\n\n");
-				}
-				
-				// Check model
-				bw.write("(check-sat)");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
 		try {
 			if(Z3solver == null)
 				Z3solver = ctx.mkSolver();
@@ -297,77 +219,6 @@ public class ModelZ3JavaService extends ModelService {
 			log.log(Level.WARNING, "Error in Z3"+e.getMessage());
 		}
 		return results;
-	}
-
-	private static class CommonOperationComparator implements Comparator<Expression> {
-
-		private Variable getVarFromOperation(Operation op) {
-			{
-				Expression e1 = op.getOperand(0);
-				if (e1 instanceof Variable)
-				{
-					// var OP num
-					return (Variable) e1;
-				}
-				else if (e1 instanceof Operation)
-				{
-					Expression e2 = ((Operation)e1).getOperand(0);
-					if (e2 instanceof Variable)
-						// (var OP num) OP num
-						return (Variable) e2;
-				}
-			}
-			{
-				Expression e1 = op.getOperand(1);
-				if (e1 instanceof Variable)
-				{
-					// num OP var
-					return (Variable) e1;
-				}
-				else if (e1 instanceof Operation)
-				{
-					Expression e2 = ((Operation)e1).getOperand(0);
-					if (e2 instanceof Variable)
-						// num OP (var OP num)
-						return (Variable) e2;
-				}
-			}
-
-			return null;
-		}
-
-		@Override
-		public int compare(Expression e1, Expression e2) {
-			if (!( e1 instanceof Operation && e1 instanceof Operation)) 
-				return e1.toString().compareTo(e2.toString());
-			
-			Operation o1 = (Operation)e1;
-			Operation o2 = (Operation)e2;
-
-			Variable v1 = getVarFromOperation(o1);
-			Variable v2 = getVarFromOperation(o2);
-
-			if (v1 != null && v2 != null) {
-				int ret;
-				if (v1.getName().startsWith("autoVar_") && v2.getName().startsWith("autoVar_")) {
-					Integer i1 = Integer.parseInt(v1.getName().substring("autoVar_".length()));
-					Integer i2 = Integer.parseInt(v2.getName().substring("autoVar_".length()));
-					ret = i1.compareTo(i2);
-				} else {
-					ret = v1.getName().compareTo(v2.getName());
-				}
-
-				if (ret != 0)
-					return ret;
-				else return o1.toString().compareTo(o2.toString());
-			}
-			else if (v1 != null)
-				return -1;
-			else if (v2 != null)
-				return 1;
-			else
-				return o1.toString().compareTo(o2.toString());
-		}
 	}
 
 }
