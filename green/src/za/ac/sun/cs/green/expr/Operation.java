@@ -52,6 +52,7 @@ public class Operation extends Expression {
 		POWER("POWER", 1),
 		SQRT("SQRT", 1),
 		I2R("I2R", 1),
+		R2I("R2I", 1),
 		// BV operations
 		EXTRACT("EXTRACT", 1),
 		I2BV("I2BV", 1),
