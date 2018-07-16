@@ -320,7 +320,7 @@ public class Z3JavaTranslator extends Visitor {
 				}
 				else if(r instanceof BitVecExpr && l instanceof IntNum)
 				{
-					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+					l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
 					stack.push(context.mkEq(l, r));
 				}
 				else if(l instanceof BoolExpr && r instanceof IntNum)
@@ -330,6 +330,10 @@ public class Z3JavaTranslator extends Visitor {
 				else if(r instanceof BoolExpr && l instanceof IntNum)
 				{
 					stack.push(context.mkEq(context.mkBool(((IntNum)l).getInt64() != 0), r));
+				}
+				else if(r instanceof BoolExpr && l instanceof BitVecExpr)
+				{
+					stack.push(context.mkEq(context.mkNot(context.mkEq(l, context.mkBV(0, ((BitVecExpr)l).getSortSize()))), r)); 
 				}
 				else
 					stack.push(context.mkEq(l, r));
@@ -395,12 +399,12 @@ public class Z3JavaTranslator extends Visitor {
 				}
 				else if(l instanceof BitVecExpr && r instanceof IntNum)
 				{
-					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
 					stack.push(context.mkBVSLT((BitVecExpr) l, (BitVecExpr) r));
 				}
 				else if(r instanceof BitVecExpr && l instanceof IntNum)
 				{
-					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+					l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
 					stack.push(context.mkBVSLT((BitVecExpr) l, (BitVecExpr) r));
 				}
 				else if(l instanceof BitVecExpr && r instanceof BitVecExpr)
@@ -491,7 +495,7 @@ public class Z3JavaTranslator extends Visitor {
 				}
 				else if(l instanceof BitVecExpr && r instanceof IntNum)
 				{
-					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
 					stack.push(context.mkBVSGT((BitVecExpr) l, (BitVecExpr) r));
 				}
 				else if(r instanceof BitVecExpr && l instanceof IntNum)
@@ -731,6 +735,8 @@ public class Z3JavaTranslator extends Visitor {
 			case BIT_OR:
 				if (l instanceof BitVecExpr && r instanceof IntNum)
 					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+				if (r instanceof BitVecExpr && l instanceof IntNum)
+					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
 				stack.push(context.mkBVOR((BitVecExpr)l, (BitVecExpr)r));
 				break;
 			case BIT_AND:
