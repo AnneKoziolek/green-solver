@@ -763,6 +763,8 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkStore((ArrayExpr)o, l, r));
 				break;
 			case SIGN_EXT:
+				if (l.isInt())
+					l = context.mkInt2BV(operation.getImmediate1(), (IntExpr) l);
 				stack.push(context.mkSignExt(operation.getImmediate1(), (BitVecExpr)l));
 				break;
 			case ZERO_EXT:
@@ -783,6 +785,9 @@ public class Z3JavaTranslator extends Visitor {
 				break;
 			case REPLACEFIRST:
 				stack.push(context.mkReplace((SeqExpr)l, (SeqExpr)r, (SeqExpr)o));
+				break;
+			case BV2R:
+				stack.push(context.mkInt2Real(context.mkBV2Int((BitVecExpr)l, true)));
 				break;
 			default:
 				throw new TranslatorUnsupportedOperation(

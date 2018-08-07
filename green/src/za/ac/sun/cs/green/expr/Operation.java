@@ -57,6 +57,8 @@ public class Operation extends Expression {
 		EXTRACT("EXTRACT", 1),
 		I2BV("I2BV", 1),
 		BV2I("BV2I", 1),
+		R2BV("R2BV", 1),
+		BV2R("BV2R", 1),
 		BIT_CONCAT("BIT_CONCAT", 2, Fix.PREFIX),
 		SIGN_EXT("SIGN_EXTEND", 1, Fix.PREFIX),
 		ZERO_EXT("ZERO_EXTEND", 1, Fix.PREFIX),
