@@ -1,5 +1,6 @@
 package za.ac.sun.cs.green;
 
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -14,13 +15,21 @@ public class Instance {
 	
 	private final Instance parent;
 
-	private final Expression expression;
+	private final Map<String, Expression> expression;
 
 	private Expression fullExpression;
 
 	private final Map<Object, Object> data;
 
-	public Instance(final Green solver, final Instance parent, final Expression expression) {
+	public Instance(final Green solver, final Instance parent, final Expression e) {
+		this(solver, parent, buildSingletonMap(e));
+	}
+
+	public Instance(final Green solver, final Instance source, final Instance parent, final Expression expression) {
+		this(solver, source, parent, buildSingletonMap(expression));
+	}
+
+	public Instance(final Green solver, final Instance parent, final Map<String, Expression> expression) {
 		this.solver = solver;
 		this.source = (parent == null) ? null : parent.source;
 		this.parent = parent;
@@ -29,7 +38,7 @@ public class Instance {
 		data = new Hashtable<Object, Object>();
 	}
 
-	public Instance(final Green solver, final Instance source, final Instance parent, final Expression expression) {
+	public Instance(final Green solver, final Instance source, final Instance parent, final Map<String, Expression> expression) {
 		this.solver = solver;
 		this.source = source;
 		this.parent = parent;
@@ -46,15 +55,27 @@ public class Instance {
 		return parent;
 	}
 	
-	public Expression getExpression() {
+	public Map<String, Expression> getExpressionMap() {
 		return expression;
+	}
+	
+	public Expression getExpression() {
+		Expression e = null;
+		for (Expression ex : expression.values()) {
+			if (e == null)
+				e = ex;
+			else
+				e = new Operation(Operation.Operator.AND, ex, e);
+		}
+		
+		return e;
 	}
 
 	public Expression getFullExpression() {
 		if (fullExpression == null) {
 			Instance p = getParent();
 			Expression e = (p == null) ? null : p.getFullExpression();
-			fullExpression = (e == null) ? expression : new Operation(Operation.Operator.AND, expression, e);
+			fullExpression = (e == null) ? getExpression() : new Operation(Operation.Operator.AND, getExpression(), e);
 		}
 		return fullExpression;
 	}
@@ -70,6 +91,14 @@ public class Instance {
 
 	public Object getData(Object key) {
 		return data.get(key);
+	}
+	
+	public static final String SINGLETON_KEY = "";
+	
+	private static Map<String, Expression> buildSingletonMap(Expression e) {
+		HashMap<String, Expression> m = new HashMap<>();
+		m.put(SINGLETON_KEY, e);
+		return m;
 	}
 	
 }
