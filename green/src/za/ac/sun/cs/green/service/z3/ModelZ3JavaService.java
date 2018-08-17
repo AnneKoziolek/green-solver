@@ -64,12 +64,17 @@ public class ModelZ3JavaService extends ModelService {
 	public Z3GreenBridge getUnderlyingExpr(Instance instance)
 	{
 		Z3JavaTranslator translator = new Z3JavaTranslator(ctx);
-		try {
-			((Expression)instance.getExpression()).accept(translator);
-		} catch (VisitorException e1) {
-			log.log(Level.WARNING, "Error in translation to Z3"+e1.getMessage());
-			throw new Error(e1);
+		
+		for (Entry<String, Expression> entry : instance.getExpressionMap().entrySet()) {
+				try {
+					entry.getValue().accept(translator);
+					translator.labelTranslation(entry.getKey());
+				} catch (VisitorException e) {
+					log.log(Level.WARNING, "Error in translation to Z3"+e.getMessage());
+					throw new Error(e);
+				}
 		}
+		
 //		Tactic css = ctx.mkTactic("ctx-solver-simplify");
 //		Tactic css = ctx.mkTactic("simplify");
 //		Goal g = ctx.mkGoal(true, true, false);
@@ -83,9 +88,9 @@ public class ModelZ3JavaService extends ModelService {
 		return ret;
 	}
 
-	public HashMap<String, Object> solve(Z3GreenBridge data) {
+	public Solution solve(Z3GreenBridge data) {
 		HashMap<String, Object> results = new HashMap<String, Object>();
-		HashMap<Expression, BoolExpr> map = new HashMap<>();
+		HashMap<String, BoolExpr> map = new HashMap<>();
 		try {
 			map.putAll(data.convertToZ3(ctx));
 		} catch (VisitorException e1) {
@@ -104,64 +109,68 @@ public class ModelZ3JavaService extends ModelService {
 			else
 				Z3solver.reset();
 
-			for (Entry<Expression, BoolExpr> e : map.entrySet())
-				Z3solver.assertAndTrack(e.getValue(), ctx.mkBoolConst(e.getKey().toString() + " ==> " + e.getValue().toString()));
+			for (Entry<String, BoolExpr> e : map.entrySet())
+				Z3solver.assertAndTrack(e.getValue(), ctx.mkBoolConst(e.getKey()));
 
 		} catch (Z3Exception e1) {
 			log.log(Level.WARNING, "Error in Z3"+e1.getMessage());
 		}
 		//solve 		
-		try { // Real Stuff is still untested
-			if (Status.SATISFIABLE == Z3solver.check()) {
+		if (Status.SATISFIABLE == Z3solver.check()) {
 //				System.out.println("SAT: " + data.constraints);
-				Model model = Z3solver.getModel();
-				for(Expr z3Var : data.z3vars) {
-					Expr z3Val = model.evaluate(z3Var, false);
-					Object val = null;
-					if (z3Val.isIntNum()) {
-						val = Long.parseLong(z3Val.toString());
-					} else if (z3Val.isBV()) {
-						BitVecNum bv = (BitVecNum) z3Val;
-						if (bv.getSortSize() == 64) {
-							// Long
-							BigInteger bi = bv.getBigInteger();
-							val = bi.longValue();
-						} else {
-							// Int
-							Long l = bv.getLong();
-							val = l.intValue();
-						}
-					} else if (z3Val.isRatNum()) {
-						RatNum rt = (RatNum) z3Val;
-						val = ((double)rt.getNumerator().getInt64()) / ((double)rt.getDenominator().getInt64());
+			Model model = Z3solver.getModel();
+			for(Expr z3Var : data.z3vars) {
+				Expr z3Val = model.evaluate(z3Var, false);
+				Object val = null;
+				if (z3Val.isIntNum()) {
+					val = Long.parseLong(z3Val.toString());
+				} else if (z3Val.isBV()) {
+					BitVecNum bv = (BitVecNum) z3Val;
+					if (bv.getSortSize() == 64) {
+						// Long
+						BigInteger bi = bv.getBigInteger();
+						val = bi.longValue();
 					} else {
-						//Must be string?
-						String sval = z3Val.toString();
-						//Need to clean up string
-						Pattern p = Pattern.compile("\\\\x(\\d\\d)");
-						Matcher m = p.matcher(sval);
-						while(m.find())
-						{
-							int i = Long.decode("0x" + m.group(1)).intValue();
-							sval = sval.replace(m.group(0), String.valueOf((char) i));
-						}
-						val = sval;
-					} 
-					results.put(z3Var.toString(), val);
+						// Int
+						Long l = bv.getLong();
+						val = l.intValue();
+					}
+				} else if (z3Val.isRatNum()) {
+					RatNum rt = (RatNum) z3Val;
+					val = ((double)rt.getNumerator().getInt64()) / ((double)rt.getDenominator().getInt64());
+				} else {
+					//Must be string?
+					String sval = z3Val.toString();
+					//Need to clean up string
+					Pattern p = Pattern.compile("\\\\x(\\d\\d)");
+					Matcher m = p.matcher(sval);
+					while(m.find())
+					{
+						int i = Long.decode("0x" + m.group(1)).intValue();
+						sval = sval.replace(m.group(0), String.valueOf((char) i));
+					}
+					val = sval;
+				} 
+				results.put(z3Var.toString(), val);
 //					String logMessage = "" + greenVar + " has value " + val;
 //					log.log(Level.INFO,logMessage);
-				}
-			} else {
-				BoolExpr[] unsat = Z3solver.getUnsatCore();
-				if(unsat.length > 0)
-					System.out.println(Arrays.toString(Z3solver.getUnsatCore()));
-//				log.log(Level.WARNING,"constraint has no model, it is infeasible");
-				return null;
 			}
-		} catch (Z3Exception e) {
-			log.log(Level.WARNING, "Error in Z3"+e.getMessage());
+			return new Solution(results, true);
+		} else {
+			BoolExpr[] unsat = Z3solver.getUnsatCore();
+			for (BoolExpr e : unsat) {
+				String key = e.toString();
+				
+				if (key.startsWith("|") && key.endsWith("|"))
+					key = key.substring(1, key.length()-1);
+
+				results.put(key, null);
+			}
+//			if(unsat.length > 0)
+//				System.out.println(Arrays.toString(Z3solver.getUnsatCore()));
+//				log.log(Level.WARNING,"constraint has no model, it is infeasible");
+			return new Solution(results, false);
 		}
-		return results;
 	}
 	@Override
 	protected Map<Variable, Object> model(Instance instance) {		
@@ -219,6 +228,17 @@ public class ModelZ3JavaService extends ModelService {
 			log.log(Level.WARNING, "Error in Z3"+e.getMessage());
 		}
 		return results;
+	}
+	
+	public static class Solution {
+		public final Map<String, Object> data;
+		public boolean sat;
+		
+		public Solution(Map<String, Object> data, boolean sat) {
+			this.data = data;
+			this.sat = sat;
+		}
+		
 	}
 
 }

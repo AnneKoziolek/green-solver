@@ -56,6 +56,8 @@ public class Z3JavaTranslator extends Visitor {
 	private Map<Variable, Expr> v2e = null;
 
 	private Map<String, Expr> charAts = null;
+
+	private Map<String, BoolExpr> constraints = null;
 	
 	public Z3JavaTranslator(Context c) {
 		this.context = c;
@@ -64,16 +66,22 @@ public class Z3JavaTranslator extends Visitor {
 		domains = new LinkedList<BoolExpr>();
 		charAts = new HashMap<String, Expr>();
 		charAtHacks = new LinkedList<BoolExpr>();
+		constraints = new HashMap<>();
 	}
 	public Z3GreenBridge getTranslationInternal() {
 		Z3GreenBridge ret = new Z3GreenBridge();
-		ret.constraints_int = (BoolExpr)stack.pop();
+		if (!stack.isEmpty())
+			throw new IllegalStateException("Stack should be empty");
+		ret.constraints_int = constraints;
 		ret.domains = domains;
 		ret.varNames = new HashSet<String>();
 		for(Variable v : v2e.keySet())
 			ret.varNames.add(v.getName());
 		ret.charAts = charAts.keySet();
 		return ret;
+	}
+	public void labelTranslation(String label) {
+		this.constraints.put(label, (BoolExpr)stack.pop());
 	}
 	public Expr getTranslation() {
 		Expr result = stack.pop();
@@ -800,8 +808,8 @@ public class Z3JavaTranslator extends Visitor {
 	
 	public static class Z3GreenBridge{
 		public Set<String> charAts;
-		public Expression constraints;
-		public BoolExpr constraints_int;
+		public Map<String, Expression> constraints;
+		public Map<String, BoolExpr> constraints_int;
 		public Expression metaConstraints;
 		public List<BoolExpr> domains;
 		public Set<String> varNames;
@@ -812,28 +820,28 @@ public class Z3JavaTranslator extends Visitor {
 			return "Z3GreenBridge [charAts=" + charAts + ", constraints=" + constraints + ", metaConstraints=" + metaConstraints + "]";
 		}
 	
-		private void splitDisjunctions(Expression expr, Set<Expression> acc) {
-			if (expr instanceof Operation) {
-				Operation op = (Operation) expr;
-				if (op.getOperator() == Operator.AND) {
-					acc.add(op.getOperand(1));
-					splitDisjunctions(op.getOperand(0), acc);
-					return;
-				}
-			}
-			acc.add(expr);
-		}
-		public Map<Expression, BoolExpr> convertToZ3(Context ctx) throws VisitorException {
+//		private void splitDisjunctions(Expression expr, Set<Expression> acc) {
+//			if (expr instanceof Operation) {
+//				Operation op = (Operation) expr;
+//				if (op.getOperator() == Operator.AND) {
+//					acc.add(op.getOperand(1));
+//					splitDisjunctions(op.getOperand(0), acc);
+//					return;
+//				}
+//			}
+//			acc.add(expr);
+//		}
+		public Map<String, BoolExpr> convertToZ3(Context ctx) throws VisitorException {
 			//First convert the regular constraints
 			Z3JavaTranslator translator = new Z3JavaTranslator(ctx);
-			Set<Expression> disjunctions = new HashSet<>();
-			splitDisjunctions(constraints, disjunctions);
-			constraints.accept(translator);
-			Map<Expression, BoolExpr> ret = new HashMap<>();
+//			Set<Expression> disjunctions = new HashSet<>();
+//			splitDisjunctions(constraints, disjunctions);
+//			constraints.accept(translator);
+			Map<String, BoolExpr> ret = new HashMap<>();
 			
-			for (Expression e : disjunctions) {
-				e.accept(translator);
-				ret.put(e, translator.getTranslationInternal().constraints_int);
+			for (Entry<String, Expression> e : constraints.entrySet()) {
+				e.getValue().accept(translator);
+				ret.put(e.getKey(), (BoolExpr) translator.getTranslation());
 			}
 //			System.out.println("Before charat nonsense: " + ret);
 
@@ -842,7 +850,7 @@ public class Z3JavaTranslator extends Visitor {
 
 			if (metaConstraints != null) {
 				metaConstraints.accept(translator);
-				ret.put(metaConstraints, translator.getTranslationInternal().constraints_int);
+				ret.put(metaConstraints.toString(), (BoolExpr) translator.getTranslation());
 			}
 //			System.out.println("With constraints "+ ret);
 			for(String s : charAts)
@@ -868,7 +876,7 @@ public class Z3JavaTranslator extends Visitor {
 				}
 //				System.out.println(charToInt);
 //				System.out.println(strCharAtVar);
-				ret.put(new StringVariable(s), ctx.mkEq(charToInt, strCharAtVar));
+				ret.put(s, ctx.mkEq(charToInt, strCharAtVar));
 			}
 			return ret;
 		}
