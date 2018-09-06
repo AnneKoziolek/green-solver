@@ -3,6 +3,7 @@ package za.ac.sun.cs.green.expr;
 import java.io.Serializable;
 
 public abstract class Expression implements Comparable<Expression>, Serializable {
+    public Serializable metadata;
 
 	/**
 	 * 
