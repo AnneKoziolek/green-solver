@@ -784,7 +784,10 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkInt2Real((IntExpr)l));
 				break;
 			case NEG:
-				stack.push(context.mkUnaryMinus((ArithExpr)l));
+				if (l.isBV())
+					stack.push(context.mkBVNeg((BitVecExpr)l));
+				else
+					stack.push(context.mkUnaryMinus((ArithExpr)l));
 				break;
 			case CONCAT:
 				if (!(r instanceof SeqExpr))
