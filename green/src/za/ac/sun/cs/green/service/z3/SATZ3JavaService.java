@@ -4,11 +4,7 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 
-import com.microsoft.z3.BoolExpr;
-import com.microsoft.z3.Context;
-import com.microsoft.z3.Solver;
-import com.microsoft.z3.Status;
-import com.microsoft.z3.Z3Exception;
+import com.microsoft.z3.*;
 
 import za.ac.sun.cs.green.Instance;
 import za.ac.sun.cs.green.Green;
@@ -34,7 +30,7 @@ public class SATZ3JavaService extends SATService {
 			return instance = new Z3Wrapper();
 		}
 
-		private Z3Wrapper() {			
+		private Z3Wrapper() {
 			HashMap<String, String> cfg = new HashMap<String, String>();
 	        cfg.put("model", "true"); //"true" ?
 			try{
@@ -44,6 +40,10 @@ public class SATZ3JavaService extends SATService {
 				throw new RuntimeException("## Error Z3: Exception caught in Z3 JNI: \n" + e);
 		    }
 			solver = ctx.mkSolver();
+
+			Params p = ctx.mkParams();
+			p.add("timeout", Z3JavaTranslator.timeoutMS);
+			solver.setParameters(p);
 		}
 
 		public Solver getSolver() {

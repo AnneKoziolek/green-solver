@@ -18,17 +18,7 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.microsoft.z3.AST;
-import com.microsoft.z3.BitVecNum;
-import com.microsoft.z3.BoolExpr;
-import com.microsoft.z3.Context;
-import com.microsoft.z3.Expr;
-import com.microsoft.z3.Model;
-import com.microsoft.z3.RatNum;
-import com.microsoft.z3.Solver;
-import com.microsoft.z3.Sort;
-import com.microsoft.z3.Status;
-import com.microsoft.z3.Z3Exception;
+import com.microsoft.z3.*;
 
 import za.ac.sun.cs.green.Green;
 import za.ac.sun.cs.green.Instance;
@@ -43,10 +33,10 @@ import za.ac.sun.cs.green.service.ModelService;
 import za.ac.sun.cs.green.service.z3.Z3JavaTranslator.Z3GreenBridge;
 
 public class ModelZ3JavaService extends ModelService {
-	
+
 	public Context ctx;
 	public Solver Z3solver;
-	
+
 	public ModelZ3JavaService(Green solver, Properties properties) {
 		super(solver);
 		HashMap<String, String> cfg = new HashMap<String, String>();
@@ -54,17 +44,17 @@ public class ModelZ3JavaService extends ModelService {
         cfg.put("unsat_core", "true");
 
 		try{
-			ctx = new Context(cfg);		 
+			ctx = new Context(cfg);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException("## Error Z3: Exception caught in Z3 JNI: \n" + e);
 	    }
 	}
-	
+
 	public Z3GreenBridge getUnderlyingExpr(Instance instance)
 	{
 		Z3JavaTranslator translator = new Z3JavaTranslator(ctx);
-		
+
 		for (Entry<String, Expression> entry : instance.getExpressionMap().entrySet()) {
 				try {
 					entry.getValue().accept(translator);
@@ -74,7 +64,7 @@ public class ModelZ3JavaService extends ModelService {
 					throw new Error(e);
 				}
 		}
-		
+
 //		Tactic css = ctx.mkTactic("ctx-solver-simplify");
 //		Tactic css = ctx.mkTactic("simplify");
 //		Goal g = ctx.mkGoal(true, true, false);
@@ -98,29 +88,34 @@ public class ModelZ3JavaService extends ModelService {
 			e1.printStackTrace();
 			throw new RuntimeException(e1);
 		}
-		
+
 //		for (Entry<Expression, BoolExpr> e : map.entrySet()) {
 //			System.out.println(e.getKey());
 //		}
-		
+
 		try {
 			if(Z3solver == null)
 				Z3solver = ctx.mkSolver();
 			else
 				Z3solver.reset();
 
+			Params p = ctx.mkParams();
+			p.add("timeout", Z3JavaTranslator.timeoutMS);
+			Z3solver.setParameters(p);
+
 			for (Entry<String, BoolExpr> e : map.entrySet())
 				Z3solver.assertAndTrack(e.getValue(), ctx.mkBoolConst(e.getKey()));
 
 		} catch (Z3Exception e1) {
 			log.log(Level.WARNING, "Error in Z3"+e1.getMessage());
+			throw e1;
 		}
-		//solve 		
+		//solve
 		if (Status.SATISFIABLE == Z3solver.check()) {
 //				System.out.println("SAT: " + data.constraints);
 			Model model = Z3solver.getModel();
 			for(Expr z3Var : data.z3vars) {
-				Expr z3Val = model.evaluate(z3Var, false);
+				Expr z3Val = model.evaluate(z3Var, true);
 				Object val = null;
 				if (z3Val.isIntNum()) {
 					val = Long.parseLong(z3Val.toString());
@@ -150,7 +145,7 @@ public class ModelZ3JavaService extends ModelService {
 						sval = sval.replace(m.group(0), String.valueOf((char) i));
 					}
 					val = sval;
-				} 
+				}
 				results.put(z3Var.toString(), val);
 //					String logMessage = "" + greenVar + " has value " + val;
 //					log.log(Level.INFO,logMessage);
@@ -160,7 +155,7 @@ public class ModelZ3JavaService extends ModelService {
 			BoolExpr[] unsat = Z3solver.getUnsatCore();
 			for (BoolExpr e : unsat) {
 				String key = e.toString();
-				
+
 				if (key.startsWith("|") && key.endsWith("|"))
 					key = key.substring(1, key.length()-1);
 
@@ -173,9 +168,9 @@ public class ModelZ3JavaService extends ModelService {
 		}
 	}
 	@Override
-	protected Map<Variable, Object> model(Instance instance) {		
+	protected Map<Variable, Object> model(Instance instance) {
 		HashMap<Variable,Object> results = new HashMap<Variable, Object>();
-		// translate instance to Z3 
+		// translate instance to Z3
 		Z3JavaTranslator translator = new Z3JavaTranslator(ctx);
 		try {
 			instance.getExpression().accept(translator);
@@ -190,8 +185,9 @@ public class ModelZ3JavaService extends ModelService {
 			Z3solver.add(expr);
 		} catch (Z3Exception e1) {
 			log.log(Level.WARNING, "Error in Z3"+e1.getMessage());
+			throw e1;
 		}
-		//solve 		
+		//solve
 		try { // Real Stuff is still untested
 			if (Status.SATISFIABLE == Z3solver.check()) {
 				Map<Variable, Expr> variableMap = translator.getVariableMap();
@@ -226,19 +222,20 @@ public class ModelZ3JavaService extends ModelService {
 			}
 		} catch (Z3Exception e) {
 			log.log(Level.WARNING, "Error in Z3"+e.getMessage());
+			throw e;
 		}
 		return results;
 	}
-	
+
 	public static class Solution {
 		public final Map<String, Object> data;
 		public boolean sat;
-		
+
 		public Solution(Map<String, Object> data, boolean sat) {
 			this.data = data;
 			this.sat = sat;
 		}
-		
+
 	}
 
 }

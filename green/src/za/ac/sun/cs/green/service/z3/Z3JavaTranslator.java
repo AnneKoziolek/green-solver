@@ -1,6 +1,5 @@
 package za.ac.sun.cs.green.service.z3;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,6 +43,8 @@ import com.microsoft.z3.Sort;
 import com.microsoft.z3.Z3Exception;
 
 public class Z3JavaTranslator extends Visitor {
+
+	public static int timeoutMS = 30 * 1000;
 	
 	private Context context = null;
 
@@ -806,6 +807,7 @@ public class Z3JavaTranslator extends Visitor {
 			}
 		} catch (Z3Exception e) {
 			e.printStackTrace();
+			throw e;
 		}
 	}
 	
