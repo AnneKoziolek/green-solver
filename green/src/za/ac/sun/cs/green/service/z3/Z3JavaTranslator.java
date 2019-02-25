@@ -589,9 +589,9 @@ public class Z3JavaTranslator extends Visitor {
 			case SUB:
 				if (l.isBV() || r.isBV()) {
 					if (r instanceof IntNum)
-						r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+						r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
 					else if (l instanceof IntNum)
-						l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+						l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
 
 					stack.push(context.mkBVSub((BitVecExpr) l, (BitVecExpr) r));
 				} else {
