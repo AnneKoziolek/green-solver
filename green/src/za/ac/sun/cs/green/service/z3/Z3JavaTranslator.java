@@ -15,6 +15,7 @@ import za.ac.sun.cs.green.expr.BVConstant;
 import za.ac.sun.cs.green.expr.BVVariable;
 import za.ac.sun.cs.green.expr.BoolConstant;
 import za.ac.sun.cs.green.expr.Expression;
+import za.ac.sun.cs.green.expr.FunctionCall;
 import za.ac.sun.cs.green.expr.IntConstant;
 import za.ac.sun.cs.green.expr.IntVariable;
 import za.ac.sun.cs.green.expr.Operation;
@@ -25,7 +26,6 @@ import za.ac.sun.cs.green.expr.StringVariable;
 import za.ac.sun.cs.green.expr.Variable;
 import za.ac.sun.cs.green.expr.Visitor;
 import za.ac.sun.cs.green.expr.VisitorException;
-import za.ac.sun.cs.green.expr.Operation.Operator;
 import za.ac.sun.cs.green.util.NotSatException;
 
 import com.microsoft.z3.ArithExpr;
@@ -59,7 +59,9 @@ public class Z3JavaTranslator extends Visitor {
 	private Map<String, Expr> charAts = null;
 
 	private Map<String, BoolExpr> constraints = null;
-	
+
+	private Map<String, FuncDecl> functions = new HashMap<>();
+
 	public Z3JavaTranslator(Context c) {
 		this.context = c;
 		stack = new Stack<Expr>();
@@ -277,6 +279,24 @@ public class Z3JavaTranslator extends Visitor {
 		}
 		stack.push(v);
 	}
+
+	@Override
+	public void postVisit(FunctionCall function) throws VisitorException {
+		Expr[] args = new Expr[function.getArguments().length];
+
+		for (int i = 0 ; i < args.length ; i++)
+			args[args.length-1-i] = stack.pop();
+
+        FuncDecl f = functions.get(function.getName());
+        if (f == null) {
+        	Sort domainRange = context.mkBitVecSort(32);
+        	f = context.mkFuncDecl(function.getName(), new Sort[]{ context.mkIntSort() , domainRange }, domainRange);
+        	functions.put(function.getName(), f);
+		}
+
+		stack.push(context.mkApp(f, args));
+    }
+
 	@Override
 	public void postVisit(Operation operation) throws VisitorException {
 		Expr l = null;
@@ -885,5 +905,9 @@ public class Z3JavaTranslator extends Visitor {
 			}
 			return ret;
 		}
+	}
+
+	public Map<String, FuncDecl> getFunctions() {
+		return functions;
 	}
 }

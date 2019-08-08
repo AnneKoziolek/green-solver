@@ -72,6 +72,10 @@ public abstract class Visitor {
 		postVisit((Expression) operation);
 	}
 
+	public void postVisit(FunctionCall function) throws VisitorException {
+		postVisit((Expression) function);
+	}
+
 	public void postVisit(RealConstant realConstant) throws VisitorException {
 		postVisit((Constant) realConstant);
 	}
