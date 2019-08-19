@@ -648,7 +648,7 @@ public class Z3JavaTranslator extends Visitor {
 					else if (r instanceof IntNum)
 						r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
 					
-					stack.push(context.mkBVSMod((BitVecExpr)l, (BitVecExpr)r));
+					stack.push(context.mkBVSRem((BitVecExpr)l, (BitVecExpr)r));
 				} else
 					stack.push(context.mkMod((IntExpr) l, (IntExpr) r));
 				break;
