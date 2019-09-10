@@ -137,7 +137,7 @@
 </target>
 	<target name="deploy" depends="install">
 		<artifact:deploy file="green.jar">
-			<remoteRepository url="https://maven.jonbell.net/repository/snapshots">
+			<remoteRepository url="https://oss.sonatype.org/content/repositories/snapshots/">
 				<authentication username="${repository.username}" password="${repository.password}"/>
 				</remoteRepository>
 			<pom refid="mypom"/>
