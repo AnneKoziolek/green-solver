@@ -10,6 +10,19 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
+import com.microsoft.z3.ArithExpr;
+import com.microsoft.z3.ArrayExpr;
+import com.microsoft.z3.BitVecExpr;
+import com.microsoft.z3.BitVecNum;
+import com.microsoft.z3.BoolExpr;
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Expr;
+import com.microsoft.z3.FuncDecl;
+import com.microsoft.z3.IntExpr;
+import com.microsoft.z3.IntNum;
+import com.microsoft.z3.SeqExpr;
+import com.microsoft.z3.Sort;
+import com.microsoft.z3.Z3Exception;
 import za.ac.sun.cs.green.expr.ArrayVariable;
 import za.ac.sun.cs.green.expr.BVConstant;
 import za.ac.sun.cs.green.expr.BVVariable;
@@ -27,20 +40,6 @@ import za.ac.sun.cs.green.expr.Variable;
 import za.ac.sun.cs.green.expr.Visitor;
 import za.ac.sun.cs.green.expr.VisitorException;
 import za.ac.sun.cs.green.util.NotSatException;
-
-import com.microsoft.z3.ArithExpr;
-import com.microsoft.z3.ArrayExpr;
-import com.microsoft.z3.BitVecExpr;
-import com.microsoft.z3.BitVecNum;
-import com.microsoft.z3.BoolExpr;
-import com.microsoft.z3.Context;
-import com.microsoft.z3.Expr;
-import com.microsoft.z3.FuncDecl;
-import com.microsoft.z3.IntExpr;
-import com.microsoft.z3.IntNum;
-import com.microsoft.z3.SeqExpr;
-import com.microsoft.z3.Sort;
-import com.microsoft.z3.Z3Exception;
 
 public class Z3JavaTranslator extends Visitor {
 
@@ -568,7 +567,7 @@ public class Z3JavaTranslator extends Visitor {
 						throw new NotSatException();
 					stack.push(exp);
 				}
-				else if(l instanceof BitVecExpr && r instanceof IntNum)
+				else if(l instanceof BitVecExpr && r instanceof IntExpr)
 				{
 					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
 					stack.push(context.mkBVSGE((BitVecExpr) l, (BitVecExpr) r));
@@ -839,7 +838,8 @@ public class Z3JavaTranslator extends Visitor {
 		public List<BoolExpr> domains;
 		public Set<String> varNames;
 		public Collection<Expr> z3vars;
-		
+		public Collection<FuncDecl> functions;
+
 		@Override
 		public String toString() {
 			return "Z3GreenBridge [charAts=" + charAts + ", constraints=" + constraints + ", metaConstraints=" + metaConstraints + "]";
@@ -872,6 +872,9 @@ public class Z3JavaTranslator extends Visitor {
 
 			Map<Variable,Expr> v2e = translator.v2e;
 			z3vars = v2e.values();
+
+			functions = new HashSet<>();
+			functions.addAll(translator.functions.values());
 
 			if (metaConstraints != null) {
 				metaConstraints.accept(translator);

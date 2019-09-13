@@ -114,6 +114,23 @@ public class ModelZ3JavaService extends ModelService {
 		if (Status.SATISFIABLE == Z3solver.check()) {
 //				System.out.println("SAT: " + data.constraints);
 			Model model = Z3solver.getModel();
+			for (FuncDecl decl : data.functions) {
+				FuncInterp z3Val = model.getFuncInterp(decl);
+				// TODO Look at the arguments past first
+				// TODO Support more than BV arguments and BV results
+				// TODO Support more than sequential first arguments
+				int[] funcRes = new int[z3Val.getNumEntries()];
+				for (FuncInterp.Entry e : z3Val.getEntries()) {
+				    if (!e.getArgs()[0].isIntNum() || !e.getValue().isBV())
+				        throw new Error("Non BV arguments not supported");
+				    Long arg = ((IntNum) e.getArgs()[0]).getInt64();
+					Long res = ((BitVecNum) e.getValue()).getLong();
+					if (arg.intValue() >= 0 && arg.intValue() < funcRes.length)
+						funcRes[arg.intValue()] = res.intValue();
+				}
+
+				results.put(decl.getName().toString(), funcRes);
+			}
 			for(Expr z3Var : data.z3vars) {
 				Expr z3Val = model.evaluate(z3Var, true);
 				Object val = null;
