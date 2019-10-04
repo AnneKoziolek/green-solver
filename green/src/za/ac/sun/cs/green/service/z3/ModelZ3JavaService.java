@@ -115,6 +115,16 @@ public class ModelZ3JavaService extends ModelService {
 //				System.out.println("SAT: " + data.constraints);
 			Model model = Z3solver.getModel();
 			for (FuncDecl decl : data.functions) {
+				boolean present = false;
+			    for (FuncDecl dd : model.getFuncDecls())
+			    	if (dd.equals(decl)) {
+			    		present = true;
+			    		break;
+					}
+
+			    if (!present)
+			    	break;
+
 				FuncInterp z3Val = model.getFuncInterp(decl);
 				// TODO Look at the arguments past first
 				// TODO Support more than BV arguments and BV results
