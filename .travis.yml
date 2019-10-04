@@ -1,18 +1,18 @@
 dist: trusty
 language: java
 script: cd green; ant install
-deploy:
-  provider: script
-  skip_cleanup: true
-  script: cd $TRAVIS_BUILD_DIR/green; ant deploy
-  on:
-    branch: master
-before_install:
-- rm green/build.properties
-- openssl aes-256-cbc -K $encrypted_01a14965deb8_key -iv $encrypted_01a14965deb8_iv
-  -in green/build.properties.enc -out green/build.properties -d
-- openssl aes-256-cbc -K $encrypted_01a14965deb8_key -iv $encrypted_01a14965deb8_iv
-  -in green/signingkey.asc.enc -out green/signingkey.asc -d
+#deploy:
+#  provider: script
+#  skip_cleanup: true
+#  script: cd $TRAVIS_BUILD_DIR/green; ant deploy
+#  on:
+#    branch: master
+#before_install:
+#- rm green/build.properties
+#- openssl aes-256-cbc -K $encrypted_01a14965deb8_key -iv $encrypted_01a14965deb8_iv
+#  -in green/build.properties.enc -out green/build.properties -d
+#- openssl aes-256-cbc -K $encrypted_01a14965deb8_key -iv $encrypted_01a14965deb8_iv
+#  -in green/signingkey.asc.enc -out green/signingkey.asc -d
 env:
   global:
     secure: ePY/1IRA1SPL9TbyVnSJwugCg4BS/1OW+tYvJR20x9rF51BGLUpqh2yxCLpXjqYsbX7hqxDGcTzILx2uu14GvzDweXVkx9ev1+BNDPGn+3pIzEUQY3enup6aJqdeXo570OoZn8ReeTXWLtD4NuhtIwzNI+7yajbXfYfcs1ro8tJb/9X2L0w0e8+f9FWb17Y23TwDXpejFV49uPZQODOAfDrfC0WUExO21FO/gSkkbOn6cwbwKeuhvlbWvNed5cjjcOV4vVJEzc48u52wMTGuatCdUJgUp5A/n+NfHoB8UVklz/h/gu+mwL3b8sSHTTeVlwhsJQNiT2+WJn5TGOohQuKIUooVUP0ndg96dJJTVsYiYuPyp5XoORu2J7qnpb6YseHJZxQcD/KAm0+zw7ce5+NKuwPPugNXpp/dppsUF3CKTs37k8OvXvIYhdMy6rnV3o8GmdqTovniqcL2h7cxSC3xGLJv0JbNgkBn+xL3eBmW6BQ7B+xg8ECmL9KLWFcNps3rhuAVzqOYamh7bfmZ0a872zPzBtRVD2BoAL2anS5HB1ZrpOFDXUcmMkJxAo5qVe4H35we61JQxYdnT/zO20SOI4uPMVTVmsG9l7bFxyy8oI6fjEgupqgLUHAHS724xAk35Cj9pFXAKZt0CGaJ6gLoTkTR7q3WrQFsVWeZOoU=
