@@ -810,8 +810,16 @@ public class Z3JavaTranslator extends Visitor {
 					stack.push(context.mkUnaryMinus((ArithExpr)l));
 				break;
 			case CONCAT:
-				if (!(r instanceof SeqExpr))
+				if (!(r instanceof SeqExpr)) {
+					if (r instanceof IntNum) {
+					    // Luís: I don't know how to extract the size of the BV from a SeqSort
+						//       However, we only ever have SeqSort of BV32
+						//       So I'm going to assume that it will be that
+						//       If I'm wrong this will throw exceptions, so it'll be easy to catch
+						r = context.mkBV(((IntNum) r).getInt(), 32);
+					}
 					r = context.mkUnit(r);
+				}
 				stack.push(context.mkConcat((SeqExpr)l, (SeqExpr)r));
 				break;
 			case REPLACEFIRST:
