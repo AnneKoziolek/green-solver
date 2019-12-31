@@ -18,6 +18,11 @@ public class StringConstant extends Constant {
 		visitor.postVisit(this);
 	}
 
+	@Override
+	public Expression copy(Copier c) {
+		return c.copy(this);
+	}
+
 //	@Override
 //	public int compareTo(Expression expression) {
 //		RealConstant constant = (RealConstant) expression;

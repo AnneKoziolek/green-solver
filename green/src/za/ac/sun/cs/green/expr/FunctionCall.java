@@ -22,6 +22,11 @@ public class FunctionCall extends Expression {
     }
 
     @Override
+    public Expression copy(Copier c) {
+        return c.copy(this);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

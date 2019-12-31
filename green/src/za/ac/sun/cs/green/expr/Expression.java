@@ -12,6 +12,8 @@ public abstract class Expression implements Comparable<Expression>, Serializable
 
 	public abstract void accept(Visitor visitor) throws VisitorException;
 
+	public abstract Expression copy(Copier copier);
+
 	@Override
 	public final int compareTo(Expression expression) {
 		return toString().compareTo(expression.toString());

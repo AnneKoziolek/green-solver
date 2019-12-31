@@ -20,6 +20,11 @@ public class StringVariable extends Variable {
 		visitor.postVisit(this);
 	}
 
+	@Override
+	public Expression copy(Copier c) {
+		return c.copy(this);
+	}
+
 //	@Override
 //	public int compareTo(Expression expression) {
 //		RealVariable variable = (RealVariable) expression;

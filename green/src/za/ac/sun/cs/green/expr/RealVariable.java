@@ -47,6 +47,11 @@ public class RealVariable extends Variable {
 //	}
 
 	@Override
+	public Expression copy(Copier c) {
+		return c.copy(this);
+	}
+
+	@Override
 	public boolean equals(Object object) {
 		if (object instanceof RealVariable) {
 			RealVariable variable = (RealVariable) object;

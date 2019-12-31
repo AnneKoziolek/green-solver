@@ -29,6 +29,11 @@ public class BVConstant extends Constant {
 	}
 
 	@Override
+	public Expression copy(Copier c) {
+		return c.copy(this);
+	}
+
+	@Override
 	public boolean equals(Object object) {
 		if (object instanceof BVConstant) {
 			BVConstant constant = (BVConstant) object;

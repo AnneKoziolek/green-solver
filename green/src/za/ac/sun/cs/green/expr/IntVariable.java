@@ -34,6 +34,11 @@ public class IntVariable extends Variable {
 		visitor.postVisit(this);
 	}
 
+	@Override
+	public Expression copy(Copier c) {
+		return c.copy(this);
+	}
+
 //	@Override
 //	public int compareTo(Expression expression) {
 //		IntVariable variable = (IntVariable) expression;

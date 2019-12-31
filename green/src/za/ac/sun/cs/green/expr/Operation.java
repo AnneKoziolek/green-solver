@@ -235,6 +235,11 @@ public class Operation extends Expression {
 		visitor.postVisit(this);
 	}
 
+	@Override
+	public Expression copy(Copier c) {
+		return c.copy(this);
+	}
+
 //	@Override
 //	public int compareTo(Expression expression) {
 //		Operation operation = (Operation) expression;

@@ -33,6 +33,11 @@ public class BoolConstant extends Constant {
 	}
 
 	@Override
+	public Expression copy(Copier c) {
+		return c.copy(this);
+	}
+
+	@Override
 	public int hashCode() {
 		return Boolean.hashCode(this.value);
 	}
