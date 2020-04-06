@@ -3,7 +3,7 @@ package za.ac.sun.cs.green.expr;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class Operation extends Expression {
+public abstract class Operation extends Expression {
 
 	/**
 	 * 
@@ -137,37 +137,39 @@ public class Operation extends Expression {
 
 	}
 
-	public static final IntConstant ZERO = new IntConstant(0L);
+	public static final IntConstant ZERO  = new IntConstant(0L);
+	public static final IntConstant ONE   = new IntConstant(1L);
+	public static final IntConstant TWO   = new IntConstant(1L);
+	public static final IntConstant THREE = new IntConstant(1L);
+	public static final IntConstant FOUR  = new IntConstant(1L);
+	public static final IntConstant FIVE  = new IntConstant(1L);
+	public static final IntConstant SIX   = new IntConstant(1L);
+	public static final IntConstant SEVEN = new IntConstant(1L);
+	public static final IntConstant EIGHT = new IntConstant(1L);
+	public static final IntConstant NINE  = new IntConstant(1L);
+	public static final IntConstant TEN   = new IntConstant(1L);
 
-	public static final IntConstant ONE = new IntConstant(1L);
+	public static final Expression FALSE = new BinaryOperation(Operation.Operator.EQ, ZERO, ONE);
+	public static final Expression TRUE  = new BinaryOperation(Operation.Operator.EQ, ZERO, ZERO);
 
-	public static final Expression FALSE = new Operation(Operation.Operator.EQ, ZERO, ONE);
-
-	public static final Expression TRUE = new Operation(Operation.Operator.EQ, ZERO, ZERO);
-
-	private final Operator operator;
+	protected final Operator operator;
 
 	private final int immediate1, immediate2;
 
-	private final Expression[] operands;
-
-	public Operation(final Operator operator, Expression... operands) {
+	public Operation(final Operator operator) {
 		this.operator = operator;
-		this.operands = operands;
 		this.immediate1 = 0;
 		this.immediate2 = 0;
 	}
 
-	public Operation(final Operator operator, int immediate, Expression... operands) {
+	public Operation(final Operator operator, int immediate) {
 		this.operator = operator;
-		this.operands = operands;
 		this.immediate1 = immediate;
 		this.immediate2 = 0;
 	}
 
-	public Operation(final Operator operator, int immediate1, int immediate2, Expression... operands) {
+	public Operation(final Operator operator, int immediate1, int immediate2) {
 		this.operator = operator;
-		this.operands = operands;
 		this.immediate1 = immediate1;
 		this.immediate2 = immediate2;
 	}
@@ -176,47 +178,19 @@ public class Operation extends Expression {
 		return operator;
 	}
 
-	public int getArity() {
-		return operands.length;
-	}
+	public abstract int getArity();
 
-	public Iterable<Expression> getOperands() {
-		return new Iterable<Expression>() {
-			@Override
-			public Iterator<Expression> iterator() {
-				return new Iterator<Expression>() {
-					private int index = 0;
-
-					@Override
-					public boolean hasNext() {
-						return index < operands.length;
-					}
-
-					@Override
-					public Expression next() {
-						if (index < operands.length) {
-							return operands[index++];
-						} else {
-							throw new NoSuchElementException();
-						}
-					}
-
-					@Override
-					public void remove() {
-						throw new UnsupportedOperationException();
-					}
-				};
-			}
-		};
-	}
+	public abstract Iterable<Expression> getOperands();
 
 	public Expression getOperand(int index) {
-		if ((index < 0) || (index >= operands.length)) {
+		if ((index < 0) || (index >= this.getArity())) {
 			return null;
 		} else {
-			return operands[index];
+			return this.doGetOperand(index);
 		}
 	}
+
+	protected abstract Expression doGetOperand(int index);
 
 	public int getImmediate1() {
 		return this.immediate1;
@@ -224,20 +198,6 @@ public class Operation extends Expression {
 
 	public int getImmediate2() {
 		return this.immediate2;
-	}
-
-	@Override
-	public void accept(Visitor visitor) throws VisitorException {
-		visitor.preVisit(this);
-		for (Expression operand : operands) {
-			operand.accept(visitor);
-		}
-		visitor.postVisit(this);
-	}
-
-	@Override
-	public Expression copy(Copier c) {
-		return c.copy(this);
 	}
 
 //	@Override
@@ -262,97 +222,12 @@ public class Operation extends Expression {
 //	}
 
 	@Override
-	public boolean equals(Object object) {
-		if (object instanceof Operation) {
-			Operation operation = (Operation) object;
-			if (operator != operation.operator) {
-				return false;
-			}
-			if (operands.length != operation.operands.length) {
-				return false;
-			}
-			for (int i = 0; i < operands.length; i++) {
-				if (!operands[i].equals(operation.operands[i])) {
-					return false;
-				}
-			}
-			return true;
-		} else {
-			return false;
-		}
-	}
+	public abstract boolean equals(Object object);
 
 	@Override
-	public int hashCode() {
-		int h = operator.hashCode();
-		for (Expression o : operands) {
-			h ^= o.hashCode();
-		}
-		return h;
-	}
+	public abstract int hashCode();
 
 	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		int arity = operator.getArity();
-		Fix fix = operator.getFix();
-		if (arity == 2 && fix == Fix.INFIX) {
-			if ((operands[0] instanceof Constant) || (operands[0] instanceof Variable)) {
-				sb.append(operands[0].toString());
-			} else {
-				sb.append('(');
-				if(operands[0] == null)
-					sb.append("NULL!");
-				else
-					sb.append(operands[0].toString());
-				sb.append(')');
-			}
-			sb.append(operator.toString());
-			if ((operands[1] instanceof Constant) || (operands[1] instanceof Variable)) {
-				sb.append(operands[1].toString());
-			} else {
-				sb.append('(');
-				if(operands[1] == null)
-					sb.append("NULL!");
-				else
-					sb.append(operands[1].toString());
-				sb.append(')');
-			}
-		} else if (arity == 1 && fix == Fix.INFIX) {
-			sb.append(operator.toString());
-			if ((operands[0] instanceof Constant) || (operands[0] instanceof Variable)) {
-				sb.append(operands[0].toString());
-			} else {
-				sb.append('(');
-				sb.append(operands[0].toString());
-				sb.append(')');
-			}
-		} else if (fix == Fix.POSTFIX) {
-			sb.append(operands[0].toString());
-			sb.append('.');
-			sb.append(operator.toString());
-			sb.append('(');
-			if (operands.length > 1) {
-				sb.append(operands[1].toString());
-				for (int i = 2; i < operands.length; i++) {
-					sb.append(',');
-					sb.append(operands[i].toString());
-				}
-			}
-			sb.append(')');
-		} else if (operands.length > 0) {
-			sb.append(operator.toString());
-			sb.append('(');
-			sb.append(operands[0].toString());
-			for (int i = 1; i < operands.length; i++) {
-				sb.append(',');
-				sb.append(operands[i].toString());
-			}
-			sb.append(')');
-		} else {
-			sb.append(operator.toString());
-		}
-		return sb.toString();
-	}
+	public abstract String toString();
 
 }

@@ -27,13 +27,21 @@ public abstract class Copier {
 	    throw new Error("Not implemented");
 	}
 
-	public Expression copy(Operation operation) {
-	    Expression[] operands = new Expression[operation.getArity()];
+	public Expression copy(UnaryOperation operation) {
+		return postCopy(operation, new UnaryOperation(operation.getOperator(), operation.getImmediate1(), operation.getImmediate2(), operation.getOperand(0)));
+	}
 
-	    for (int i = 0 ; i < operands.length ; i++)
-	    	operands[i] = operation.getOperand(i).copy(this);
+	public Expression copy(BinaryOperation operation) {
+		return postCopy(operation, new BinaryOperation(operation.getOperator(), operation.getImmediate1(), operation.getImmediate2(), operation.getOperand(0), operation.getOperand(1)));
+	}
 
-		return postCopy(operation, new Operation(operation.getOperator(), operation.getImmediate1(), operation.getImmediate2(), operands));
+	public Expression copy(NaryOperation operation) {
+		Expression[] operands = new Expression[operation.getArity()];
+
+		for (int i = 0 ; i < operands.length ; i++)
+			operands[i] = operation.getOperand(i).copy(this);
+
+		return postCopy(operation, new NaryOperation(operation.getOperator(), operation.getImmediate1(), operation.getImmediate2(), operands));
 	}
 
 	public Expression copy(RealConstant realConstant) {
