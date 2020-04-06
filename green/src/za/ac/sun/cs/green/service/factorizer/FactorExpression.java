@@ -6,11 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import za.ac.sun.cs.green.expr.Expression;
-import za.ac.sun.cs.green.expr.Operation;
-import za.ac.sun.cs.green.expr.Variable;
-import za.ac.sun.cs.green.expr.Visitor;
-import za.ac.sun.cs.green.expr.VisitorException;
+import za.ac.sun.cs.green.expr.*;
 
 /**
  * This class records the factors for a given constraint. It supports
@@ -131,9 +127,9 @@ public class FactorExpression {
 	 * on some existing factors, in which case all dependent factors must be
 	 * merged.
 	 * 
-	 * @param varNames
+	 * @param conjunct2Vars
 	 *            The set of variables involved in the new conjunct
-	 * @param exprs
+	 * @param expr
 	 *            The logical expression being conjoined
 	 */
 	private void addConstraint(Expression expr, Map<Expression, Set<Variable>> conjunct2Vars) {
@@ -243,7 +239,7 @@ public class FactorExpression {
 				if (!intersect.isEmpty()) {
 					// System.out.println("     found a match with conjuncts "+var2Factor.get(vars));
 					for (Expression e : var2Factor.get(vars)) {
-						dependentExpr = (dependentExpr == null) ? e : new Operation(Operation.Operator.AND, dependentExpr, e);
+						dependentExpr = (dependentExpr == null) ? e : new BinaryOperation(Operation.Operator.AND, dependentExpr, e);
 
 					}
 
@@ -286,7 +282,7 @@ public class FactorExpression {
 		for (Set<Variable> vars : var2Factor.keySet()) {
 			Expression curFactor = null;
 			for (Expression e : var2Factor.get(vars)) {
-				curFactor = (curFactor == null) ? e : new Operation(Operation.Operator.AND, curFactor, e);
+				curFactor = (curFactor == null) ? e : new BinaryOperation(Operation.Operator.AND, curFactor, e);
 			}
 			factors.add(curFactor);
 		}
@@ -333,9 +329,6 @@ public class FactorExpression {
 		 * 
 		 * @param conjunct2Vars
 		 *            a map from conjuncts to the variables they contain
-		 * @param var2Conjuncts
-		 *            a map from the variables to the conjuncts in which they
-		 *            appear
 		 */
 		public Collector(Map<Expression, Set<Variable>> conjunct2Vars) {
 			this.conjunct2Vars = conjunct2Vars;

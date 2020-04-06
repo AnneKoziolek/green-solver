@@ -9,11 +9,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import za.ac.sun.cs.green.expr.Expression;
-import za.ac.sun.cs.green.expr.Operation;
-import za.ac.sun.cs.green.expr.Variable;
-import za.ac.sun.cs.green.expr.Visitor;
-import za.ac.sun.cs.green.expr.VisitorException;
+import za.ac.sun.cs.green.expr.*;
 
 public class Slicer {
 
@@ -149,7 +145,7 @@ public class Slicer {
 			if (minimal == null) {
 				minimal = e;
 			} else {
-				minimal = new Operation(Operation.Operator.AND, minimal, e);
+				minimal = new BinaryOperation(Operation.Operator.AND, minimal, e);
 			}
 		}
 		return minimal;

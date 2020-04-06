@@ -7,13 +7,7 @@ import java.util.logging.Level;
 
 import za.ac.sun.cs.green.Green;
 import za.ac.sun.cs.green.Instance;
-import za.ac.sun.cs.green.expr.Expression;
-import za.ac.sun.cs.green.expr.IntConstant;
-import za.ac.sun.cs.green.expr.IntVariable;
-import za.ac.sun.cs.green.expr.Operation;
-import za.ac.sun.cs.green.expr.Variable;
-import za.ac.sun.cs.green.expr.Visitor;
-import za.ac.sun.cs.green.expr.VisitorException;
+import za.ac.sun.cs.green.expr.*;
 import za.ac.sun.cs.green.service.BasicService;
 import za.ac.sun.cs.green.util.Reporter;
 
@@ -58,7 +52,7 @@ public class BounderService extends BasicService {
 			Expression e = bound(instance.getFullExpression());
 			final Instance p = instance.getParent();
 			if (p != null) {
-				e = new Operation(Operation.Operator.AND,
+				e = new BinaryOperation(Operation.Operator.AND,
 						p.getFullExpression(), e);
 			}
 			final Instance q = new Instance(getSolver(), instance.getSource(),
@@ -99,16 +93,16 @@ public class BounderService extends BasicService {
 			for (Variable v : variables) {
 				if (v instanceof IntVariable) {
 					IntVariable iv = (IntVariable) v;
-					Operation lower = new Operation(Operation.Operator.GE, iv,
+					Operation lower = new BinaryOperation(Operation.Operator.GE, iv,
 							new IntConstant(iv.getLowerBound()));
-					Operation upper = new Operation(Operation.Operator.LE, iv,
+					Operation upper = new BinaryOperation(Operation.Operator.LE, iv,
 							new IntConstant(iv.getUpperBound()));
-					Operation bound = new Operation(Operation.Operator.AND,
+					Operation bound = new BinaryOperation(Operation.Operator.AND,
 							lower, upper);
 					if (e == null) {
 						e = bound;
 					} else {
-						e = new Operation(Operation.Operator.AND, e, bound);
+						e = new BinaryOperation(Operation.Operator.AND, e, bound);
 					}
 				} else {
 					log.log(Level.WARNING,

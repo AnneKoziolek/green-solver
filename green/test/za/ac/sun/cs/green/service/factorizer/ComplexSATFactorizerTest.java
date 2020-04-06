@@ -10,10 +10,7 @@ import org.junit.Test;
 
 import za.ac.sun.cs.green.Green;
 import za.ac.sun.cs.green.Instance;
-import za.ac.sun.cs.green.expr.Expression;
-import za.ac.sun.cs.green.expr.IntConstant;
-import za.ac.sun.cs.green.expr.IntVariable;
-import za.ac.sun.cs.green.expr.Operation;
+import za.ac.sun.cs.green.expr.*;
 import za.ac.sun.cs.green.util.Configuration;
 
 public class ComplexSATFactorizerTest {
@@ -77,15 +74,15 @@ public class ComplexSATFactorizerTest {
 		for (int i = 0; i < N + 1; i++) {
 			v[i] = new IntVariable("v" + i, 0, 99);
 		}
-		Operation[] o = new Operation[N + 1];
+		Operation[] o = new BinaryOperation[N + 1];
 		for (int i = 0; i < N; i++) {
-			o[i] = new Operation(Operation.Operator.LE, v[i], v[(i + 1) % N]);
+			o[i] = new BinaryOperation(Operation.Operator.LE, v[i], v[(i + 1) % N]);
 		}
 		IntConstant c10 = new IntConstant(10);
-		o[N] = new Operation(Operation.Operator.LT, v[N], c10);
+		o[N] = new BinaryOperation(Operation.Operator.LT, v[N], c10);
 		Operation oo = o[0];
 		for (int i = 1; i <= N; i++) {
-			oo = new Operation(Operation.Operator.AND, oo, o[i]);
+			oo = new BinaryOperation(Operation.Operator.AND, oo, o[i]);
 		}
 		checkSat(o[N], oo);
 	}
@@ -106,15 +103,15 @@ public class ComplexSATFactorizerTest {
 		for (int i = 0; i < N + 1; i++) {
 			v[i] = new IntVariable("v" + i, 0, 99);
 		}
-		Operation[] o = new Operation[N + 1];
+		Operation[] o = new BinaryOperation[N + 1];
 		for (int i = 0; i < N; i++) {
-			o[i] = new Operation(Operation.Operator.LT, v[i], v[(i + 1) % N]);
+			o[i] = new BinaryOperation(Operation.Operator.LT, v[i], v[(i + 1) % N]);
 		}
 		IntConstant c10 = new IntConstant(10);
-		o[N] = new Operation(Operation.Operator.LT, v[N], c10);
+		o[N] = new BinaryOperation(Operation.Operator.LT, v[N], c10);
 		Operation oo = o[0];
 		for (int i = 1; i <= N; i++) {
-			oo = new Operation(Operation.Operator.AND, oo, o[i]);
+			oo = new BinaryOperation(Operation.Operator.AND, oo, o[i]);
 		}
 		checkUnsat(o[N], oo);
 	}
@@ -142,15 +139,15 @@ public class ComplexSATFactorizerTest {
 		for (int i = 0; i < N + 1; i++) {
 			v[i] = new IntVariable("v" + i, 0, N);
 		}
-		Operation[] o = new Operation[N + 1];
+		Operation[] o = new BinaryOperation[N + 1];
 		for (int i = 0; i < N; i++) {
-			o[i] = new Operation(Operation.Operator.LT, v[i], v[i + 1]);
+			o[i] = new BinaryOperation(Operation.Operator.LT, v[i], v[i + 1]);
 		}
 		IntConstant cN = new IntConstant(N);
-		o[N] = new Operation(Operation.Operator.LT, v[N], cN);
+		o[N] = new BinaryOperation(Operation.Operator.LT, v[N], cN);
 		Operation oo = o[0];
 		for (int i = 1; i <= N; i++) {
-			oo = new Operation(Operation.Operator.AND, oo, o[i]);
+			oo = new BinaryOperation(Operation.Operator.AND, oo, o[i]);
 		}
 		checkUnsat(o[N], oo);
 	}
@@ -177,15 +174,15 @@ public class ComplexSATFactorizerTest {
 			v[i] = new IntVariable("v" + i, 0, 99);
 			w[i] = new IntVariable("w" + i, 0, 99);
 		}
-		Operation[] o = new Operation[N + 1];
+		Operation[] o = new BinaryOperation[N + 1];
 		for (int i = 0; i < N; i++) {
-			Operation o0 = new Operation(Operation.Operator.LE, v[i], w[i]);
-			Operation o1 = new Operation(Operation.Operator.LE, w[i], v[i]);
-			o[i] = new Operation(Operation.Operator.AND, o0, o1);
+			Operation o0 = new BinaryOperation(Operation.Operator.LE, v[i], w[i]);
+			Operation o1 = new BinaryOperation(Operation.Operator.LE, w[i], v[i]);
+			o[i] = new BinaryOperation(Operation.Operator.AND, o0, o1);
 		}
 		Operation oo = o[0];
 		for (int i = 1; i < N; i++) {
-			oo = new Operation(Operation.Operator.AND, oo, o[i]);
+			oo = new BinaryOperation(Operation.Operator.AND, oo, o[i]);
 		}
 		checkSat(oo);
 	}
@@ -212,15 +209,15 @@ public class ComplexSATFactorizerTest {
 			v[i] = new IntVariable("v" + i, 0, 99);
 			w[i] = new IntVariable("w" + i, 0, 99);
 		}
-		Operation[] o = new Operation[N + 1];
+		Operation[] o = new BinaryOperation[N + 1];
 		for (int i = 0; i < N; i++) {
-			Operation o0 = new Operation(Operation.Operator.LT, v[i], w[i]);
-			Operation o1 = new Operation(Operation.Operator.LT, w[i], v[i]);
-			o[i] = new Operation(Operation.Operator.AND, o0, o1);
+			Operation o0 = new BinaryOperation(Operation.Operator.LT, v[i], w[i]);
+			Operation o1 = new BinaryOperation(Operation.Operator.LT, w[i], v[i]);
+			o[i] = new BinaryOperation(Operation.Operator.AND, o0, o1);
 		}
 		Operation oo = o[0];
 		for (int i = 1; i < N; i++) {
-			oo = new Operation(Operation.Operator.AND, oo, o[i]);
+			oo = new BinaryOperation(Operation.Operator.AND, oo, o[i]);
 		}
 		checkUnsat(oo);
 	}

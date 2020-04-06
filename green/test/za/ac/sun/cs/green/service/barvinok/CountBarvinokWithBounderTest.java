@@ -14,10 +14,7 @@ import org.junit.Test;
 import za.ac.sun.cs.green.EntireSuite;
 import za.ac.sun.cs.green.Green;
 import za.ac.sun.cs.green.Instance;
-import za.ac.sun.cs.green.expr.Expression;
-import za.ac.sun.cs.green.expr.IntConstant;
-import za.ac.sun.cs.green.expr.IntVariable;
-import za.ac.sun.cs.green.expr.Operation;
+import za.ac.sun.cs.green.expr.*;
 import za.ac.sun.cs.green.util.Configuration;
 
 public class CountBarvinokWithBounderTest {
@@ -72,7 +69,7 @@ public class CountBarvinokWithBounderTest {
 	public void test01() {
 		IntVariable v = new IntVariable("aa", 0, 99);
 		IntConstant c = new IntConstant(0);
-		Operation o = new Operation(Operation.Operator.EQ, v, c);
+		Operation o = new BinaryOperation(Operation.Operator.EQ, v, c);
 		check(o, new Apint(1));
 	}
 
@@ -86,9 +83,9 @@ public class CountBarvinokWithBounderTest {
 	@Test
 	public void test02() {
 		IntVariable vv = new IntVariable("aa", 0, 99);
-		Operation ao = new Operation(Operation.Operator.GT, vv, new IntConstant(0));
-		Operation bo = new Operation(Operation.Operator.LT, vv, new IntConstant(10));
-		Operation o = new Operation(Operation.Operator.AND, ao, bo);
+		Operation ao = new BinaryOperation(Operation.Operator.GT, vv, new IntConstant(0));
+		Operation bo = new BinaryOperation(Operation.Operator.LT, vv, new IntConstant(10));
+		Operation o = new BinaryOperation(Operation.Operator.AND, ao, bo);
 		check(o, new Apint(9));
 	}
 	
@@ -102,10 +99,10 @@ public class CountBarvinokWithBounderTest {
 	@Test
 	public void test03() {
 		IntVariable vv = new IntVariable("aa", 0, 99);
-		Operation ww = new Operation(Operation.Operator.MUL, new IntConstant(3), vv);
-		Operation ao = new Operation(Operation.Operator.GT, ww, new IntConstant(6));
-		Operation bo = new Operation(Operation.Operator.LT, vv, new IntConstant(10));		
-		Operation o = new Operation(Operation.Operator.AND, ao, bo);
+		Operation ww = new BinaryOperation(Operation.Operator.MUL, new IntConstant(3), vv);
+		Operation ao = new BinaryOperation(Operation.Operator.GT, ww, new IntConstant(6));
+		Operation bo = new BinaryOperation(Operation.Operator.LT, vv, new IntConstant(10));
+		Operation o = new BinaryOperation(Operation.Operator.AND, ao, bo);
 		check(o, new Apint(7));
 	}
 
@@ -118,10 +115,10 @@ public class CountBarvinokWithBounderTest {
 	@Test
 	public void test04() {
 		IntVariable vv = new IntVariable("aa", 0, 9);
-		Operation ww = new Operation(Operation.Operator.MUL, new IntConstant(3), vv);
-		Operation ao = new Operation(Operation.Operator.GT, ww, new IntConstant(6));
-		Operation bo = new Operation(Operation.Operator.LT, vv, new IntConstant(10));		
-		Operation o = new Operation(Operation.Operator.AND, ao, bo);
+		Operation ww = new BinaryOperation(Operation.Operator.MUL, new IntConstant(3), vv);
+		Operation ao = new BinaryOperation(Operation.Operator.GT, ww, new IntConstant(6));
+		Operation bo = new BinaryOperation(Operation.Operator.LT, vv, new IntConstant(10));
+		Operation o = new BinaryOperation(Operation.Operator.AND, ao, bo);
 		check(o, new Apint(7));
 	}
 	
@@ -135,7 +132,7 @@ public class CountBarvinokWithBounderTest {
 	public void test05() {
 		IntVariable aa = new IntVariable("aa", 0, 9);
 		IntVariable bb = new IntVariable("bb", 0, 9);
-		Operation o = new Operation(Operation.Operator.LT, aa, bb);
+		Operation o = new BinaryOperation(Operation.Operator.LT, aa, bb);
 		check(o, new Apint(45));
 	}
 	
@@ -153,11 +150,11 @@ public class CountBarvinokWithBounderTest {
 		IntVariable x = new IntVariable("x", -10, 10);
 		IntVariable y = new IntVariable("y", -10, 10);
 		IntVariable z = new IntVariable("z", -10, 10);
-		Operation o1 = new Operation(Operation.Operator.GE, x, zero);
-		Operation o2 = new Operation(Operation.Operator.GE, y, zero);
-		Operation o3 = new Operation(Operation.Operator.GE, z, zero);
-		Operation o4 = new Operation(Operation.Operator.AND, o1, o2);
-		Operation o = new Operation(Operation.Operator.AND, o3, o4);
+		Operation o1 = new BinaryOperation(Operation.Operator.GE, x, zero);
+		Operation o2 = new BinaryOperation(Operation.Operator.GE, y, zero);
+		Operation o3 = new BinaryOperation(Operation.Operator.GE, z, zero);
+		Operation o4 = new BinaryOperation(Operation.Operator.AND, o1, o2);
+		Operation o = new BinaryOperation(Operation.Operator.AND, o3, o4);
 		check(o, new Apint(1331));
 	}
 	

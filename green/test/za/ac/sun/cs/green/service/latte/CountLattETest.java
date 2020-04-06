@@ -14,10 +14,7 @@ import org.junit.Test;
 import za.ac.sun.cs.green.EntireSuite;
 import za.ac.sun.cs.green.Green;
 import za.ac.sun.cs.green.Instance;
-import za.ac.sun.cs.green.expr.Expression;
-import za.ac.sun.cs.green.expr.IntConstant;
-import za.ac.sun.cs.green.expr.IntVariable;
-import za.ac.sun.cs.green.expr.Operation;
+import za.ac.sun.cs.green.expr.*;
 import za.ac.sun.cs.green.util.Configuration;
 
 public class CountLattETest {
@@ -71,9 +68,9 @@ public class CountLattETest {
 	public void test01() {
 		IntConstant a = new IntConstant(1);
 		IntVariable v = new IntVariable("aa", 0, 99);
-		Operation t = new Operation(Operation.Operator.MUL, a, v);
+		Operation t = new BinaryOperation(Operation.Operator.MUL, a, v);
 		IntConstant c = new IntConstant(0);
-		Operation o = new Operation(Operation.Operator.EQ, t, c);
+		Operation o = new BinaryOperation(Operation.Operator.EQ, t, c);
 		check(o, new Apint(1));
 	}
 
@@ -90,14 +87,14 @@ public class CountLattETest {
 		IntConstant oo = new IntConstant(1);
 		IntVariable vv = new IntVariable("aa", 0, 99);
 		
-		Operation at = new Operation(Operation.Operator.MUL, oo, vv);
-		Operation ao = new Operation(Operation.Operator.GT, at, zz);
+		Operation at = new BinaryOperation(Operation.Operator.MUL, oo, vv);
+		Operation ao = new BinaryOperation(Operation.Operator.GT, at, zz);
 		
-		Operation bt1 = new Operation(Operation.Operator.MUL, oo, vv);
-		Operation bt2 = new Operation(Operation.Operator.ADD, bt1, new IntConstant(-10));
-		Operation bo = new Operation(Operation.Operator.LT, bt2, zz);
+		Operation bt1 = new BinaryOperation(Operation.Operator.MUL, oo, vv);
+		Operation bt2 = new BinaryOperation(Operation.Operator.ADD, bt1, new IntConstant(-10));
+		Operation bo = new BinaryOperation(Operation.Operator.LT, bt2, zz);
 		
-		Operation o = new Operation(Operation.Operator.AND, ao, bo);
+		Operation o = new BinaryOperation(Operation.Operator.AND, ao, bo);
 		check(o, new Apint(9));
 	}
 	
@@ -115,15 +112,15 @@ public class CountLattETest {
 		IntConstant tt = new IntConstant(3);
 		IntVariable vv = new IntVariable("aa", 0, 99);
 		
-		Operation at1 = new Operation(Operation.Operator.MUL, tt, vv);
-		Operation at2 = new Operation(Operation.Operator.ADD, at1, new IntConstant(-6));
-		Operation ao = new Operation(Operation.Operator.GT, at2, zz);
+		Operation at1 = new BinaryOperation(Operation.Operator.MUL, tt, vv);
+		Operation at2 = new BinaryOperation(Operation.Operator.ADD, at1, new IntConstant(-6));
+		Operation ao = new BinaryOperation(Operation.Operator.GT, at2, zz);
 		
-		Operation bt1 = new Operation(Operation.Operator.MUL, oo, vv);
-		Operation bt2 = new Operation(Operation.Operator.ADD, bt1, new IntConstant(-10));
-		Operation bo = new Operation(Operation.Operator.LT, bt2, zz);
+		Operation bt1 = new BinaryOperation(Operation.Operator.MUL, oo, vv);
+		Operation bt2 = new BinaryOperation(Operation.Operator.ADD, bt1, new IntConstant(-10));
+		Operation bo = new BinaryOperation(Operation.Operator.LT, bt2, zz);
 		
-		Operation o = new Operation(Operation.Operator.AND, ao, bo);
+		Operation o = new BinaryOperation(Operation.Operator.AND, ao, bo);
 		check(o, new Apint(7));
 	}
 
@@ -146,21 +143,21 @@ public class CountLattETest {
 		IntVariable aa = new IntVariable("aa", 0, 9);
 		IntVariable bb = new IntVariable("bb", 0, 9);
 
-		Operation plusaa = new Operation(Operation.Operator.MUL, one, aa);
-		Operation plusbb = new Operation(Operation.Operator.MUL, one, bb);
-		Operation minbb = new Operation(Operation.Operator.MUL, minone, bb);
+		Operation plusaa = new BinaryOperation(Operation.Operator.MUL, one, aa);
+		Operation plusbb = new BinaryOperation(Operation.Operator.MUL, one, bb);
+		Operation minbb = new BinaryOperation(Operation.Operator.MUL, minone, bb);
 
-		Operation oab1 = new Operation(Operation.Operator.ADD, plusaa, minbb);
-		Operation oab = new Operation(Operation.Operator.LT, oab1, zero);
-		Operation oa1 = new Operation(Operation.Operator.GT, new Operation(Operation.Operator.ADD, plusaa, one), zero);
-		Operation oa2 = new Operation(Operation.Operator.LT, new Operation(Operation.Operator.ADD, plusaa, minten), zero);
-		Operation ob1 = new Operation(Operation.Operator.GT, new Operation(Operation.Operator.ADD, plusbb, one), zero);
-		Operation ob2 = new Operation(Operation.Operator.LT, new Operation(Operation.Operator.ADD, plusbb, minten), zero);
+		Operation oab1 = new BinaryOperation(Operation.Operator.ADD, plusaa, minbb);
+		Operation oab = new BinaryOperation(Operation.Operator.LT, oab1, zero);
+		Operation oa1 = new BinaryOperation(Operation.Operator.GT, new BinaryOperation(Operation.Operator.ADD, plusaa, one), zero);
+		Operation oa2 = new BinaryOperation(Operation.Operator.LT, new BinaryOperation(Operation.Operator.ADD, plusaa, minten), zero);
+		Operation ob1 = new BinaryOperation(Operation.Operator.GT, new BinaryOperation(Operation.Operator.ADD, plusbb, one), zero);
+		Operation ob2 = new BinaryOperation(Operation.Operator.LT, new BinaryOperation(Operation.Operator.ADD, plusbb, minten), zero);
 
-		Operation o3 = new Operation(Operation.Operator.AND, oab, oa1);
-		Operation o2 = new Operation(Operation.Operator.AND, o3, oa2);
-		Operation o1 = new Operation(Operation.Operator.AND, o2, ob1);
-		Operation o = new Operation(Operation.Operator.AND, o1, ob2);
+		Operation o3 = new BinaryOperation(Operation.Operator.AND, oab, oa1);
+		Operation o2 = new BinaryOperation(Operation.Operator.AND, o3, oa2);
+		Operation o1 = new BinaryOperation(Operation.Operator.AND, o2, ob1);
+		Operation o = new BinaryOperation(Operation.Operator.AND, o1, ob2);
 
 		check(o, new Apint(45));
 	}

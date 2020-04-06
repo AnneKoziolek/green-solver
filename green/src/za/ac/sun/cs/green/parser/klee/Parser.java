@@ -7,9 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import za.ac.sun.cs.green.expr.Expression;
-import za.ac.sun.cs.green.expr.IntConstant;
-import za.ac.sun.cs.green.expr.Operation;
+import za.ac.sun.cs.green.expr.*;
 import za.ac.sun.cs.green.expr.Operation.Operator;
 
 public class Parser {
@@ -47,7 +45,7 @@ public class Parser {
 			if (result == null) {
 				result = e;
 			} else {
-				result = new Operation(Operator.AND, result, e);
+				result = new BinaryOperation(Operator.AND, result, e);
 			}
 		}
 		return result;
@@ -64,47 +62,47 @@ public class Parser {
 			case ADD:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.ADD, l, r);
+				return new BinaryOperation(Operator.ADD, l, r);
 			case AND:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.BIT_AND, l, r);
+				return new BinaryOperation(Operator.BIT_AND, l, r);
 			case ASHR:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.SHIFTUR, l, r);
+				return new BinaryOperation(Operator.SHIFTUR, l, r);
 			case CONCAT:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.BIT_CONCAT, l, r);
+				return new BinaryOperation(Operator.BIT_CONCAT, l, r);
 			case EQ:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.EQ, l, r);
+				return new BinaryOperation(Operator.EQ, l, r);
 			case EXTRACT:
 				// TODO
 			case LSHR:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.SHIFTR, l, r);
+				return new BinaryOperation(Operator.SHIFTR, l, r);
 			case MUL:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.MUL, l, r);
+				return new BinaryOperation(Operator.MUL, l, r);
 			case NE:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.NE, l, r);
+				return new BinaryOperation(Operator.NE, l, r);
 			case NEG:
 				l = getExpression(op.getLeft());
-				return new Operation(Operator.NEG, l);
+				return new UnaryOperation(Operator.NEG, l);
 			case NOT:
 				l = getExpression(op.getLeft());
-				return new Operation(Operator.NOT, l);
+				return new UnaryOperation(Operator.NOT, l);
 			case OR:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.BIT_OR, l, r);
+				return new BinaryOperation(Operator.BIT_OR, l, r);
 			case READ:
 			case READLSB:
 			case READMSB:
@@ -113,7 +111,7 @@ public class Parser {
 			case UDIV:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.DIV, l, r);
+				return new BinaryOperation(Operator.DIV, l, r);
 			case SELECT:
 			case SEXT:
 				// equate to new symbolic variable
@@ -122,39 +120,39 @@ public class Parser {
 			case UGE:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.GE, l, r);
+				return new BinaryOperation(Operator.GE, l, r);
 			case SGT:
 			case UGT:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.GT, l, r);
+				return new BinaryOperation(Operator.GT, l, r);
 			case SLE:
 			case ULE:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.LE, l, r);
+				return new BinaryOperation(Operator.LE, l, r);
 			case SLT:
 			case ULT:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.LT, l, r);
+				return new BinaryOperation(Operator.LT, l, r);
 			case SHL:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.SHIFTL, l, r);
+				return new BinaryOperation(Operator.SHIFTL, l, r);
 			case SREM:
 			case UREM:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.MOD, l, r);
+				return new BinaryOperation(Operator.MOD, l, r);
 			case SUB:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.SUB, l, r);
+				return new BinaryOperation(Operator.SUB, l, r);
 			case XOR:
 				l = getExpression(op.getLeft());
 				r = getExpression(op.getRight());
-				return new Operation(Operator.BIT_XOR, l, r);
+				return new BinaryOperation(Operator.BIT_XOR, l, r);
 			case ZEXT:
 				// TODO
 			default:

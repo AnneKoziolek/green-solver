@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import za.ac.sun.cs.green.expr.BinaryOperation;
 import za.ac.sun.cs.green.expr.Expression;
 import za.ac.sun.cs.green.expr.Operation;
 
@@ -65,7 +66,7 @@ public class Instance {
 			if (e == null)
 				e = ex;
 			else
-				e = new Operation(Operation.Operator.AND, ex, e);
+				e = new BinaryOperation(Operation.Operator.AND, ex, e);
 		}
 		
 		return e;
@@ -75,7 +76,7 @@ public class Instance {
 		if (fullExpression == null) {
 			Instance p = getParent();
 			Expression e = (p == null) ? null : p.getFullExpression();
-			fullExpression = (e == null) ? getExpression() : new Operation(Operation.Operator.AND, getExpression(), e);
+			fullExpression = (e == null) ? getExpression() : new BinaryOperation(Operation.Operator.AND, getExpression(), e);
 		}
 		return fullExpression;
 	}
