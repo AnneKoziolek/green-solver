@@ -1,19 +1,11 @@
 package za.ac.sun.cs.green.service.z3;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,8 +16,6 @@ import za.ac.sun.cs.green.Green;
 import za.ac.sun.cs.green.Instance;
 import za.ac.sun.cs.green.expr.ArrayVariable;
 import za.ac.sun.cs.green.expr.Expression;
-import za.ac.sun.cs.green.expr.Operation;
-import za.ac.sun.cs.green.expr.Operation.Operator;
 import za.ac.sun.cs.green.expr.StringVariable;
 import za.ac.sun.cs.green.expr.Variable;
 import za.ac.sun.cs.green.expr.VisitorException;
@@ -55,7 +45,10 @@ public class ModelZ3JavaService extends ModelService {
 	{
 		Z3JavaTranslator translator = new Z3JavaTranslator(ctx);
 
+		LinkedList<String> done = new LinkedList<>();
+
 		for (Entry<String, Expression> entry : instance.getExpressionMap().entrySet()) {
+		    done.addLast(entry.getKey());
 				try {
 					entry.getValue().accept(translator);
 					translator.labelTranslation(entry.getKey());
