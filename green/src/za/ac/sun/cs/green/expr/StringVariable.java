@@ -5,7 +5,11 @@ public class StringVariable extends Variable {
 	private static final long serialVersionUID = -4405246046006773012L;
 
 	public int observedLength;
-	
+
+	public StringVariable(){
+		super(null);
+	}
+
 	public StringVariable(String name) {
 		super(name);
 	}
@@ -13,7 +17,7 @@ public class StringVariable extends Variable {
 	public StringVariable(String name, Object original) {
 		super(name, original);
 	}
-	
+
 	@Override
 	public void accept(Visitor visitor) throws VisitorException {
 		visitor.preVisit(this);

@@ -1,12 +1,15 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public abstract class Operation extends Expression {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 6628353039467454097L;
 
@@ -65,11 +68,11 @@ public abstract class Operation extends Expression {
 		// String Operations
 		SUBSTRING("SUBSTRING", 3, Fix.POSTFIX),
 		CONCAT("CONCAT", 2, Fix.POSTFIX),
-		TRIM("TRIM", 1, Fix.POSTFIX), 
+		TRIM("TRIM", 1, Fix.POSTFIX),
 		REPLACE("REPLACE", 3, Fix.POSTFIX),
-		REPLACEFIRST("REPLACEFIRST", 3, Fix.POSTFIX),  
+		REPLACEFIRST("REPLACEFIRST", 3, Fix.POSTFIX),
 		TOLOWERCASE("TOLOWERCASE", 2, Fix.POSTFIX),
-		TOUPPERCASE("TOUPPERCASE", 2, Fix.POSTFIX), 
+		TOUPPERCASE("TOUPPERCASE", 2, Fix.POSTFIX),
 		VALUEOF("VALUEOF", 2, Fix.POSTFIX),
 		// String Comparators
 		NOTCONTAINS("NOTCONTAINS", 2, Fix.POSTFIX),
@@ -152,9 +155,9 @@ public abstract class Operation extends Expression {
 	public static final Expression FALSE = new BinaryOperation(Operation.Operator.EQ, ZERO, ONE);
 	public static final Expression TRUE  = new BinaryOperation(Operation.Operator.EQ, ZERO, ZERO);
 
-	protected final Operator operator;
+	protected Operator operator;
 
-	private final int immediate1, immediate2;
+	private int immediate1, immediate2;
 
 	public Operation(final Operator operator) {
 		this.operator = operator;
@@ -230,4 +233,19 @@ public abstract class Operation extends Expression {
 	@Override
 	public abstract String toString();
 
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeInt(this.operator.ordinal());
+		out.writeInt(this.immediate1);
+		out.writeInt(this.immediate2);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		this.operator = Operator.values()[in.readInt()];
+		this.immediate1 = in.readInt();
+		this.immediate2 = in.readInt();
+	}
 }

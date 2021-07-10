@@ -1,10 +1,17 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class NaryOperation extends Operation {
-    private final Expression[] operands;
+    private Expression[] operands;
+
+    public NaryOperation(){
+        super(null);
+    }
 
     public NaryOperation(final Operator operator, Expression... operands) {
         super(operator);
@@ -168,5 +175,23 @@ public class NaryOperation extends Operation {
             sb.append(operator.toString());
         }
         return sb.toString();
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        super.writeExternal(out);
+        out.writeInt(this.operands.length);
+        for(Expression exp : this.operands){
+            out.writeObject(exp);
+        }
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+        this.operands = new Expression[in.readInt()];
+        for(int i = 0; i < this.operands.length; i++){
+            this.operands[i] = (Expression) in.readObject();
+        }
     }
 }

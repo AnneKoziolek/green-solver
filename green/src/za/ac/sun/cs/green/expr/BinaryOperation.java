@@ -1,11 +1,18 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class BinaryOperation extends Operation {
-    private final Expression left;
-    private final Expression right;
+    private Expression left;
+    private Expression right;
+
+    public BinaryOperation(){
+        super(null);
+    }
 
     public BinaryOperation(final Operator operator, Expression left, Expression right) {
         super(operator);
@@ -138,5 +145,19 @@ public class BinaryOperation extends Operation {
             sb.append(" " + right.toString());
         }
         return sb.toString();
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+        this.left = (Expression) in.readObject();
+        this.right = (Expression) in.readObject();
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        super.writeExternal(out);
+        out.writeObject(this.left);
+        out.writeObject(this.right);
     }
 }

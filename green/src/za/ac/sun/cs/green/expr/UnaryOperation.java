@@ -1,10 +1,17 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class UnaryOperation extends Operation {
-    private final Expression operand;
+    private Expression operand;
+
+    public UnaryOperation() {
+        super(null);
+    }
 
     public UnaryOperation(final Operator operator, Expression operand) {
         super(operator);
@@ -119,5 +126,17 @@ public class UnaryOperation extends Operation {
             sb.append(operand.toString());
         }
         return sb.toString();
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+        this.operand = (Expression) in.readObject();
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        super.writeExternal(out);
+        out.writeObject(this.operand);
     }
 }

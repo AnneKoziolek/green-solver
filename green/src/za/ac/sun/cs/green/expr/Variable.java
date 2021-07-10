@@ -1,20 +1,23 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 
-public abstract class Variable extends Expression implements Serializable {
+public abstract class Variable extends Expression {
 
 	private static final long serialVersionUID = -1712398155778326862L;
 
-	private final String name;
+	private String name;
 
-	private final Object original;
+	private Object original;
 
 	public Variable(final String name) {
 		this.name = name;
 		this.original = null;
 	}
-	
+
 	public Variable(final String name, final Object original) {
 		this.name = name;
 		this.original = original;
@@ -57,6 +60,18 @@ public abstract class Variable extends Expression implements Serializable {
 			return false;
 		return true;
 	}
-	
-	
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeUTF(this.name);
+		out.writeObject(this.original);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		this.name = in.readUTF();
+		this.original = in.readObject();
+	}
 }

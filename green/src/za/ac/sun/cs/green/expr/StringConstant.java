@@ -1,8 +1,14 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 public class StringConstant extends Constant {
 	private static final long serialVersionUID = -5850463337832601650L;
-	private final String value;
+	private String value;
+
+	public StringConstant(){}
 
 	public StringConstant(final String value) {
 		this.value = value;
@@ -55,4 +61,15 @@ public class StringConstant extends Constant {
 		return value;
 	}
 
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeUTF(this.value);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		this.value = in.readUTF();
+	}
 }

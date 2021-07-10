@@ -1,8 +1,14 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 public class RealConstant extends Constant {
 
-	private final double value;
+	private double value;
+
+	public RealConstant(){}
 
 	public RealConstant(final double value) {
 		this.value = value;
@@ -55,4 +61,15 @@ public class RealConstant extends Constant {
 		return Double.toString(value);
 	}
 
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		this.value = in.readDouble();
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeDouble(this.value);
+	}
 }

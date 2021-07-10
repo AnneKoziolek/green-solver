@@ -1,13 +1,20 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 public class IntConstant extends Constant {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1218090840820645022L;
-	private final long value;
+	private long value;
 
+	public IntConstant(){
+
+	}
 	public IntConstant(final int value) {
 		this.value = (long) value;
 	}
@@ -67,4 +74,15 @@ public class IntConstant extends Constant {
 		return Long.toString(value);
 	}
 
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		this.value = in.readLong();
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeLong(this.value);
+	}
 }

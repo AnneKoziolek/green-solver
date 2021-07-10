@@ -1,12 +1,20 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 public class IntVariable extends Variable {
 
 	private static final long serialVersionUID = 8942503924718973792L;
 
-	private final Integer lowerBound;
+	private Integer lowerBound;
 
-	private final Integer upperBound;
+	private Integer upperBound;
+
+	public IntVariable(){
+		super(null);
+	}
 
 	public IntVariable(String name, Integer lowerBound, Integer upperBound) {
 		super(name);
@@ -19,7 +27,7 @@ public class IntVariable extends Variable {
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
 	}
-	
+
 	public Integer getLowerBound() {
 		return lowerBound;
 	}
@@ -65,4 +73,17 @@ public class IntVariable extends Variable {
 		return getName();
 	}
 
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeInt(this.lowerBound);
+		out.writeInt(this.upperBound);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		this.lowerBound = in.readInt();
+		this.upperBound = in.readInt();
+	}
 }

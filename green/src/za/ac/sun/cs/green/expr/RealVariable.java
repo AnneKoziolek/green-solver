@@ -1,25 +1,33 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 public class RealVariable extends Variable {
 
 	private static final long serialVersionUID = -8815803703741978839L;
 
-	private final Double lowerBound;
+	private Double lowerBound;
 
-	private final Double upperBound;
+	private Double upperBound;
+
+	public RealVariable(){
+		super(null);
+	}
 
 	public RealVariable(String name, Object original, Double lowerBound, Double upperBound) {
 		super(name, original);
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
 	}
-	
+
 	public RealVariable(String name, Double lowerBound, Double upperBound) {
 		super(name);
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
 	}
-	
+
 	public RealVariable(String name) {
 		super(name);
 		this.lowerBound = Double.NEGATIVE_INFINITY;
@@ -71,4 +79,17 @@ public class RealVariable extends Variable {
 		return getName();
 	}
 
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeDouble(this.lowerBound.doubleValue());
+		out.writeDouble(this.upperBound.doubleValue());
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		this.lowerBound = in.readDouble();
+		this.upperBound = in.readDouble();
+	}
 }

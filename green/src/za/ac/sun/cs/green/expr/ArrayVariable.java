@@ -1,10 +1,18 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 public class ArrayVariable extends Variable {
 
 	private static final long serialVersionUID = 9145722106088943318L;
-	
-	private final Class<?> type;
+
+	private Class<?> type;
+
+	public ArrayVariable(){
+		super(null);
+	}
 
 	public ArrayVariable(String name, Class<?> type) {
 		super(name);
@@ -29,5 +37,17 @@ public class ArrayVariable extends Variable {
 
 	public Class<?> getType() {
 		return type;
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeObject(type);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		this.type = (Class<?>) in.readObject();
 	}
 }

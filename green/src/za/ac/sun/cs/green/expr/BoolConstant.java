@@ -1,13 +1,20 @@
 package za.ac.sun.cs.green.expr;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 public class BoolConstant extends Constant {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 219363665250466089L;
-	private final boolean value;
+	private boolean value;
 
+	public BoolConstant(){
+
+	}
 	public BoolConstant(final boolean value) {
 		this.value = value;
 	}
@@ -47,4 +54,15 @@ public class BoolConstant extends Constant {
 		return Boolean.toString(this.value);
 	}
 
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeBoolean(this.value);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		this.value = in.readBoolean();
+	}
 }
