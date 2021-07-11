@@ -2,6 +2,7 @@ package za.ac.sun.cs.green.expr;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public abstract class Expression implements Comparable<Expression>, Externalizable {
@@ -29,14 +30,12 @@ public abstract class Expression implements Comparable<Expression>, Externalizab
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		if (metadata instanceof HashMap) {
+		if (metadata instanceof HashSet) {
 			out.writeBoolean(true);
-			HashMap map = (HashMap) metadata;
-			out.writeInt(map.size());
-			for (Object each : map.entrySet()) {
-				Map.Entry entry = (Map.Entry) each;
-				out.writeObject(entry.getKey());
-				out.writeObject(entry.getValue());
+			HashSet set = (HashSet) metadata;
+			out.writeInt(set.size());
+			for (Object each : set) {
+				out.writeObject(each);
 			}
 		} else {
 			out.writeBoolean(false);
@@ -48,10 +47,10 @@ public abstract class Expression implements Comparable<Expression>, Externalizab
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		if (in.readBoolean()) {
 			int size = in.readInt();
-			HashMap map = new HashMap<>(size);
+			HashSet map = new HashSet(size);
 			this.metadata = map;
 			for(int i = 0; i < size; i++){
-				map.put(in.readObject(), in.readObject());
+				map.add(in.readObject());
 			}
 		} else {
 			metadata = (Serializable) in.readObject();
