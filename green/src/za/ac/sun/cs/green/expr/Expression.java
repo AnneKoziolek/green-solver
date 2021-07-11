@@ -1,6 +1,8 @@
 package za.ac.sun.cs.green.expr;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class Expression implements Comparable<Expression>, Externalizable {
     public Serializable metadata;
@@ -27,11 +29,32 @@ public abstract class Expression implements Comparable<Expression>, Externalizab
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(metadata);
+		if (metadata instanceof HashMap) {
+			out.writeBoolean(true);
+			HashMap map = (HashMap) metadata;
+			out.writeInt(map.size());
+			for (Object each : map.entrySet()) {
+				Map.Entry entry = (Map.Entry) each;
+				out.writeObject(entry.getKey());
+				out.writeObject(entry.getValue());
+			}
+		} else {
+			out.writeBoolean(false);
+			out.writeObject(metadata);
+		}
 	}
 
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-	    metadata = (Serializable) in.readObject();
+		if (in.readBoolean()) {
+			int size = in.readInt();
+			HashMap map = new HashMap<>(size);
+			this.metadata = map;
+			for(int i = 0; i < size; i++){
+				map.put(in.readObject(), in.readObject());
+			}
+		} else {
+			metadata = (Serializable) in.readObject();
+		}
 	}
 }
