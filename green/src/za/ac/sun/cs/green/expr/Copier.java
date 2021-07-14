@@ -2,8 +2,37 @@ package za.ac.sun.cs.green.expr;
 
 public abstract class Copier {
 
-	public Expression copy(Expression expression) throws VisitorException {
-	    throw new Error("Not Implemented");
+	public Expression copy(Expression expression) {
+		if (expression instanceof IntConstant) {
+			return copy((IntConstant) expression);
+		} else if (expression instanceof BoolConstant) {
+			return copy((BoolConstant) expression);
+		} else if (expression instanceof BVConstant) {
+			return copy((BVConstant) expression);
+		} else if (expression instanceof RealConstant) {
+			return copy((RealConstant) expression);
+		} else if (expression instanceof StringConstant) {
+			return copy((StringConstant) expression);
+		} else if (expression instanceof UnaryOperation) {
+			return copy((UnaryOperation) expression);
+		} else if (expression instanceof NaryOperation) {
+			return copy((NaryOperation) expression);
+		} else if (expression instanceof BinaryOperation) {
+			return copy((BinaryOperation) expression);
+		} else if (expression instanceof StringVariable) {
+			return copy((StringVariable) expression);
+		} else if (expression instanceof RealVariable) {
+			return copy((RealVariable) expression);
+		} else if (expression instanceof IntVariable) {
+			return copy((IntVariable) expression);
+		} else if (expression instanceof ArrayVariable) {
+			return copy((ArrayVariable) expression);
+		} else if (expression instanceof BVVariable) {
+			return copy((BVVariable) expression);
+		} else if (expression instanceof FunctionCall) {
+			return copy((FunctionCall) expression);
+		}
+		throw new Error("Not Implemented: " + expression.getClass());
 	}
 
 	protected Expression postCopy(Expression src, Expression dst) {
@@ -24,32 +53,32 @@ public abstract class Copier {
 	}
 
 	public Expression copy(IntVariable intVariable) {
-	    throw new Error("Not implemented");
+	    return postCopy(intVariable, new IntVariable(intVariable.getName(), intVariable.getLowerBound(), intVariable.getUpperBound()));
 	}
 
 	public Expression copy(UnaryOperation operation) {
-		return postCopy(operation, new UnaryOperation(operation.getOperator(), operation.getImmediate1(), operation.getImmediate2(), operation.getOperand(0)));
+		return postCopy(operation, new UnaryOperation(operation.getOperator(), operation.getImmediate1(), operation.getImmediate2(), copy(operation.getOperand(0))));
 	}
 
 	public Expression copy(BinaryOperation operation) {
-		return postCopy(operation, new BinaryOperation(operation.getOperator(), operation.getImmediate1(), operation.getImmediate2(), operation.getOperand(0), operation.getOperand(1)));
+		return postCopy(operation, new BinaryOperation(operation.getOperator(), operation.getImmediate1(), operation.getImmediate2(), copy(operation.getOperand(0)), copy(operation.getOperand(1))));
 	}
 
 	public Expression copy(NaryOperation operation) {
 		Expression[] operands = new Expression[operation.getArity()];
 
 		for (int i = 0 ; i < operands.length ; i++)
-			operands[i] = operation.getOperand(i).copy(this);
+			operands[i] = copy(operation.getOperand(i));
 
 		return postCopy(operation, new NaryOperation(operation.getOperator(), operation.getImmediate1(), operation.getImmediate2(), operands));
 	}
 
 	public Expression copy(RealConstant realConstant) {
-		throw new Error("Not implemented");
+	    return postCopy(realConstant, new RealConstant(realConstant.getValue()));
 	}
 
 	public Expression copy(RealVariable realVariable) {
-		throw new Error("Not implemented");
+	    return postCopy(realVariable, new RealVariable(realVariable.getName(), realVariable.getLowerBound(), realVariable.getUpperBound()));
 	}
 
 	public Expression copy(StringConstant stringConstant) {
@@ -68,7 +97,7 @@ public abstract class Copier {
 		Expression[] args = new Expression[function.getArguments().length];
 
 		for (int i = 0 ; i < args.length ; i++)
-			args[i] = function.getArguments()[i].copy(this);
+			args[i] = copy(function.getArguments()[i]);
 
 		return postCopy(function, new FunctionCall(function.getName(), args));
 	}
