@@ -86,7 +86,7 @@ public abstract class Copier {
 	}
 
 	public Expression copy(StringVariable stringVariable) {
-		return postCopy(stringVariable, new StringConstant(stringVariable.getName()));
+		return postCopy(stringVariable, new StringVariable(stringVariable.getName()));
 	}
 
 	public Expression copy(BoolConstant constant) {
