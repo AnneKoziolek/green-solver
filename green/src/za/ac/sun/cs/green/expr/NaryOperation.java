@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class NaryOperation extends Operation {
+    private static final long serialVersionUID = -6171255095455601563L;
     private Expression[] operands;
 
     public NaryOperation(){

@@ -812,13 +812,18 @@ public class Z3JavaTranslator extends Visitor {
 			case CONCAT:
 				if (!(r instanceof SeqExpr)) {
 					if (r instanceof IntNum) {
-					    // Luís: I don't know how to extract the size of the BV from a SeqSort
+						// Luís: I don't know how to extract the size of the BV from a SeqSort
 						//       However, we only ever have SeqSort of BV32
 						//       So I'm going to assume that it will be that
 						//       If I'm wrong this will throw exceptions, so it'll be easy to catch
 						r = context.mkBV(((IntNum) r).getInt(), 32);
 					}
 					r = context.mkUnit(r);
+				} else if (!(l instanceof SeqExpr)) {
+					if (l instanceof IntNum) {
+						l = context.mkBV(((IntNum) l).getInt(), 32);
+					}
+					l = context.mkUnit(l);
 				}
 				stack.push(context.mkConcat((SeqExpr)l, (SeqExpr)r));
 				break;
@@ -826,7 +831,10 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkReplace((SeqExpr)l, (SeqExpr)r, (SeqExpr)o));
 				break;
 			case BV2R:
-				stack.push(context.mkInt2Real(context.mkBV2Int((BitVecExpr)l, true)));
+				stack.push(context.mkInt2Real(context.mkBV2Int((BitVecExpr) l, true)));
+				break;
+			case INDEXOFSTRING:
+				stack.push(context.mkIndexOf((SeqExpr) l, (SeqExpr) r, (ArithExpr) o));
 				break;
 			default:
 				throw new TranslatorUnsupportedOperation(

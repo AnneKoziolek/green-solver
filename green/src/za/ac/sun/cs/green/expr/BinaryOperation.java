@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class BinaryOperation extends Operation {
+    private static final long serialVersionUID = -8740571742085779063L;
     private Expression left;
     private Expression right;
 
