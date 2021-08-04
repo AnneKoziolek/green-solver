@@ -1,5 +1,8 @@
 package za.ac.sun.cs.green.service.z3;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -928,5 +931,29 @@ public class Z3JavaTranslator extends Visitor {
 
 	public Map<String, FuncDecl> getFunctions() {
 		return functions;
+	}
+
+	public static void main(String[] args) throws IOException, ClassNotFoundException, VisitorException {
+		FileInputStream fis = new FileInputStream(args[0]);
+		ObjectInputStream ois = new ObjectInputStream(fis);
+
+		Map<String, Expression> constraints = (Map<String, Expression>) ois.readObject();
+
+		Context ctx = new Context();
+		Z3JavaTranslator translator = new Z3JavaTranslator(ctx);
+
+		int success = 0;
+		for (Entry<String, Expression> e : constraints.entrySet()) {
+			try {
+				e.getValue().accept(translator);
+				translator.getTranslation();
+				translator.getVariableMap().values();
+				translator.getFunctions().values();
+				System.out.println("Translated " + (success++) + "/" + (constraints.size()-1) + " expressions");
+			} catch (Throwable t) {
+				System.out.println("Exception when translating label \"" + e.getKey() + "\"");
+				throw t;
+			}
+		}
 	}
 }
