@@ -828,7 +828,7 @@ public class Z3JavaTranslator extends Visitor {
 					}
 					l = context.mkUnit(l);
 				}
-				stack.push(context.mkConcat((SeqExpr)l, (SeqExpr)r));
+				stack.push(context.mkConcat(new Expr[]{l, r}));
 				break;
 			case REPLACEFIRST:
 				stack.push(context.mkReplace((SeqExpr)l, (SeqExpr)r, (SeqExpr)o));
