@@ -10,8 +10,8 @@ public class BVConstant extends Constant {
 	 *
 	 */
 	private static final long serialVersionUID = 3665626951329772927L;
-	private long value;
-	private int  size;
+	public long value;
+	public int  size;
 
 	public BVConstant(){
 

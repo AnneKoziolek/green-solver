@@ -6,7 +6,7 @@ import java.io.ObjectOutput;
 
 public class RealConstant extends Constant {
 
-	private double value;
+	public double value;
 
 	public RealConstant(){}
 

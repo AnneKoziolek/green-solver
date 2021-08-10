@@ -8,9 +8,9 @@ public class RealVariable extends Variable {
 
 	private static final long serialVersionUID = -8815803703741978839L;
 
-	private Double lowerBound;
+	public Double lowerBound;
 
-	private Double upperBound;
+	public Double upperBound;
 
 	public RealVariable(){
 		super(null);

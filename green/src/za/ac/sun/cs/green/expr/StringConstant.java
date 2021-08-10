@@ -6,7 +6,7 @@ import java.io.ObjectOutput;
 
 public class StringConstant extends Constant {
 	private static final long serialVersionUID = -5850463337832601650L;
-	private String value;
+	public String value;
 
 	public StringConstant(){}
 

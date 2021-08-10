@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 
 public class NaryOperation extends Operation {
     private static final long serialVersionUID = -6171255095455601563L;
-    private Expression[] operands;
+    public Expression[] operands;
 
     public NaryOperation(){
         super(null);
@@ -29,6 +29,9 @@ public class NaryOperation extends Operation {
         this.operands = operands;
     }
 
+    public Expression[] getOperandsUnsafe(){
+        return operands;
+    }
 
     @Override
     public int getArity() {

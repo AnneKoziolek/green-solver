@@ -10,7 +10,7 @@ public class IntConstant extends Constant {
 	 *
 	 */
 	private static final long serialVersionUID = 1218090840820645022L;
-	private long value;
+	public long value;
 
 	public IntConstant(){
 

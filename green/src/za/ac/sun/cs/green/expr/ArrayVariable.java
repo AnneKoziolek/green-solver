@@ -8,7 +8,7 @@ public class ArrayVariable extends Variable {
 
 	private static final long serialVersionUID = 9145722106088943318L;
 
-	private Class<?> type;
+	public Class<?> type;
 
 	public ArrayVariable(){
 		super(null);

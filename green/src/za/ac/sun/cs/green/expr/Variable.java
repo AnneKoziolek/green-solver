@@ -9,7 +9,7 @@ public abstract class Variable extends Expression {
 
 	private static final long serialVersionUID = -1712398155778326862L;
 
-	private String name;
+	public String name;
 
 	private Object original;
 

@@ -10,7 +10,7 @@ public class BoolConstant extends Constant {
 	 *
 	 */
 	private static final long serialVersionUID = 219363665250466089L;
-	private boolean value;
+	public boolean value;
 
 	public BoolConstant(){
 

@@ -8,9 +8,9 @@ public class IntVariable extends Variable {
 
 	private static final long serialVersionUID = 8942503924718973792L;
 
-	private Integer lowerBound;
+	public Integer lowerBound;
 
-	private Integer upperBound;
+	public Integer upperBound;
 
 	public IntVariable(){
 		super(null);

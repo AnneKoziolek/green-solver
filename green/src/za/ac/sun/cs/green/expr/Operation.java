@@ -156,7 +156,7 @@ public abstract class Operation extends Expression {
 	public static final Expression FALSE = new BinaryOperation(Operation.Operator.EQ, ZERO, ONE);
 	public static final Expression TRUE  = new BinaryOperation(Operation.Operator.EQ, ZERO, ZERO);
 
-	protected Operator operator;
+	public Operator operator;
 
 	private int immediate1, immediate2;
 

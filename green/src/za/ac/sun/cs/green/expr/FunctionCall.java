@@ -7,8 +7,8 @@ import java.util.Arrays;
 
 public class FunctionCall extends Expression {
 
-    private String name;
-    private Expression[] arguments;
+    public String name;
+    public Expression[] arguments;
 
     public FunctionCall(){
 

@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 
 public class UnaryOperation extends Operation {
     private static final long serialVersionUID = -8138087857364194252L;
-    private Expression operand;
+    public Expression operand;
 
     public UnaryOperation() {
         super(null);

@@ -7,7 +7,7 @@ import java.io.ObjectOutput;
 public class BVVariable extends Variable {
 	private static final long serialVersionUID = -2827655758420481178L;
 
-	private int  size;
+	public int  size;
 
 	public BVVariable(){
 		super(null);
