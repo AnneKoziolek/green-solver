@@ -51,9 +51,12 @@ public class StringConstant extends Constant {
 		}
 	}
 
+	int hashCode;
 	@Override
 	public int hashCode() {
-		return value.hashCode();
+		if(this.hashCode == 0)
+			this.hashCode = value.hashCode();
+		return this.hashCode;
 	}
 
 	@Override

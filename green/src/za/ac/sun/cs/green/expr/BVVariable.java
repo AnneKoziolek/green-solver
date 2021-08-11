@@ -9,6 +9,7 @@ public class BVVariable extends Variable {
 
 	public int  size;
 
+	public BinaryOperation and255;
 	public BVVariable(){
 		super(null);
 	}
@@ -54,9 +55,13 @@ public class BVVariable extends Variable {
 		}
 	}
 
+	int hashCode;
 	@Override
 	public int hashCode() {
-		return getName().hashCode();
+		if(this.hashCode == 0){
+			this.hashCode = getName().hashCode();
+		}
+		return this.hashCode;
 	}
 
 	@Override

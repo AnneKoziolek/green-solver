@@ -90,7 +90,7 @@ public class BinaryOperation extends Operation {
 
     @Override
     public boolean equals(Object object) {
-        if (object instanceof Operation) {
+        if (object instanceof BinaryOperation) {
             BinaryOperation operation = (BinaryOperation) object;
             if (operator != operation.operator) {
                 return false;
@@ -105,12 +105,16 @@ public class BinaryOperation extends Operation {
         }
     }
 
+    int hashCode = -1;
     @Override
     public int hashCode() {
-        int h = operator.hashCode();
-        h ^= left.hashCode();
-        h ^= right.hashCode();
-        return h;
+        if(this.hashCode == -1) {
+            int h = operator.hashCode();
+            h ^= left.hashCode();
+            h ^= right.hashCode();
+            this.hashCode = h;
+        }
+        return this.hashCode;
     }
 
     @Override

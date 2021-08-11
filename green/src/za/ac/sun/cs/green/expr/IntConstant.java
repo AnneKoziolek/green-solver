@@ -12,6 +12,13 @@ public class IntConstant extends Constant {
 	private static final long serialVersionUID = 1218090840820645022L;
 	public long value;
 
+	public static final IntConstant ICONST_0 = new IntConstant(0);
+	public static final IntConstant ICONST_1 = new IntConstant(1);
+	public static final IntConstant ICONST_MAX_INT = new IntConstant(Integer.MAX_VALUE);
+	public static final IntConstant ICONST_MIN_INT = new IntConstant(Integer.MIN_VALUE);
+	public static final IntConstant ICONST_CHAR_0 = new IntConstant('0');
+	public static final IntConstant ICONST_CHAR_9 = new IntConstant('9');
+
 	public IntConstant(){
 
 	}

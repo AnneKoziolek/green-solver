@@ -46,7 +46,7 @@ public class BoolConstant extends Constant {
 
 	@Override
 	public int hashCode() {
-		return Boolean.hashCode(this.value);
+		return value ? 1231 : 1237;
 	}
 
 	@Override

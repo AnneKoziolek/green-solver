@@ -158,7 +158,7 @@ public abstract class Operation extends Expression {
 
 	public Operator operator;
 
-	private int immediate1, immediate2;
+	public int immediate1, immediate2;
 
 	public Operation(final Operator operator) {
 		this.operator = operator;

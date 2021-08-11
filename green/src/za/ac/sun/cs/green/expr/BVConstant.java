@@ -50,9 +50,13 @@ public class BVConstant extends Constant {
 		}
 	}
 
+	int hashcode;
 	@Override
 	public int hashCode() {
-		return ((int) (value^(value>>>32))) ^ size;
+	    if(this.hashcode == 0){
+			this.hashcode = ((int) (value^(value>>>32))) ^ size;
+		}
+	    return this.hashcode;
 	}
 
 	@Override

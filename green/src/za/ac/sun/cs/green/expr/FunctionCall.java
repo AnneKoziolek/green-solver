@@ -42,6 +42,17 @@ public class FunctionCall extends Expression {
                 Arrays.equals(arguments, that.arguments);
     }
 
+    int hashCode;
+    @Override
+    public int hashCode() {
+        if(this.hashCode == 0) {
+            int result = name != null ? name.hashCode() : 0;
+            result = 31 * result + Arrays.hashCode(arguments);
+            this.hashCode = result;
+        }
+        return this.hashCode;
+    }
+
     @Override
     public String toString() {
         return name + '(' + Arrays.toString(arguments) + ')';

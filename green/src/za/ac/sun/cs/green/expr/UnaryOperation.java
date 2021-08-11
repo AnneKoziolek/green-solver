@@ -95,11 +95,15 @@ public class UnaryOperation extends Operation {
         }
     }
 
+    int hashCode;
     @Override
     public int hashCode() {
-        int h = operator.hashCode();
-        h ^= operand.hashCode();
-        return h;
+        if(this.hashCode == 0) {
+            int h = operator.hashCode();
+            h ^= operand.hashCode();
+            this.hashCode = h;
+        }
+        return this.hashCode;
     }
 
     @Override

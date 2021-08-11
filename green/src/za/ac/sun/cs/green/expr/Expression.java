@@ -7,6 +7,7 @@ import java.util.Map;
 
 public abstract class Expression implements Comparable<Expression>, Externalizable {
     public Serializable metadata;
+    public int serializationMark;
 
 	/**
 	 *

@@ -6,6 +6,8 @@ public class StringVariable extends Variable {
 
 	public int observedLength;
 
+	public BinaryOperation andBV3265535;
+
 	public StringVariable(){
 		super(null);
 	}
@@ -45,9 +47,13 @@ public class StringVariable extends Variable {
 		}
 	}
 
+	int hashCode;
+
 	@Override
 	public int hashCode() {
-		return getName().hashCode();
+		if (this.hashCode == 0)
+			this.hashCode = getName().hashCode();
+		return this.hashCode;
 	}
 
 	@Override

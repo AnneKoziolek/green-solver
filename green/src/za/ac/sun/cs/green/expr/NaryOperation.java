@@ -108,13 +108,17 @@ public class NaryOperation extends Operation {
         }
     }
 
+    int hashCode;
     @Override
     public int hashCode() {
-        int h = operator.hashCode();
-        for (Expression o : operands) {
-            h ^= o.hashCode();
+        if(this.hashCode == 0) {
+            int h = operator.hashCode();
+            for (Expression o : operands) {
+                h ^= o.hashCode();
+            }
+            this.hashCode = h;
         }
-        return h;
+        return this.hashCode;
     }
 
     @Override

@@ -69,9 +69,12 @@ public class RealVariable extends Variable {
 		}
 	}
 
+	int  hashCode;
 	@Override
 	public int hashCode() {
-		return getName().hashCode();
+		if(this.hashCode == 0)
+		this.hashCode = getName().hashCode();
+		return this.hashCode;
 	}
 
 	@Override
