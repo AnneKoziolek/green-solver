@@ -57,9 +57,17 @@ public class GreenServer {
 				output = new PrintStream(clientSocket.getOutputStream());
 				while (clientSocket.isConnected()) {
 					String query = input.readLine();
-					if ((query == null) || query.equals("QUIT")) {
+					// null means client disconnected - just close this connection and wait for next
+					if (query == null) {
+						log.info("Client disconnected, waiting for next connection");
+						try { input.close(); } catch (IOException x) { }
+						try { clientSocket.close(); } catch (IOException x) { }
+						break;
+					}
+					// QUIT means explicit shutdown request
+					if (query.equals("QUIT")) {
 						isRunning = false;
-						log.info("Closing the client connection and shutting down");
+						log.info("Received QUIT - shutting down server");
 						output.print("OK");
 						output.close();
 						try {
