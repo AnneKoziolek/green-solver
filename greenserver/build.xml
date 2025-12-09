@@ -21,8 +21,8 @@
     <property name="junit.dir" value="bin/junit"/>
     <property name="jar.file" value="greenserver.jar"/>
     <property name="debuglevel" value="source,lines,vars"/>
-    <property name="target" value="1.6"/>
-    <property name="source" value="1.6"/>
+    <property name="target" value="11"/>
+    <property name="source" value="11"/>
     <path id="greenserver.classpath">
         <pathelement location="${output.dir}"/>
         <pathelement location="lib/green.jar"/>

@@ -1,2 +1,5 @@
 green/target/
 greenserver/bin/
+.m2repo/*
+greenserver/lib/green.jar
+

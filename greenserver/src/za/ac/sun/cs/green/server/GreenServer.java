@@ -1,16 +1,22 @@
 package za.ac.sun.cs.green.server;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Base64;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import za.ac.sun.cs.green.Green;
 import za.ac.sun.cs.green.Instance;
+import za.ac.sun.cs.green.expr.Expression;
+import za.ac.sun.cs.green.util.Configuration;
 
 public class GreenServer {
 
@@ -21,6 +27,21 @@ public class GreenServer {
 	public static void main(String[] args) {
 		green = new Green("greenserver");
 		log = green.getLog();
+		
+		// Configure Z3 SAT solver
+		try {
+			Properties props = new Properties();
+			props.setProperty("green.services", "sat");
+			props.setProperty("green.service.sat", "z3");
+			props.setProperty("green.service.sat.z3", "za.ac.sun.cs.green.service.z3.SATZ3JavaService");
+			Configuration config = new Configuration(green, props);
+			config.configure();
+			log.info("Green server configured with Z3 solver");
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Failed to configure Z3 solver", e);
+			return;
+		}
+		
 		ServerSocket serverSocket = null;
 		Socket clientSocket = null;
 		BufferedReader input = null;
@@ -97,13 +118,30 @@ public class GreenServer {
 	}
 
 	private static char[] process(String query) {
-		log.info("QUERY: " + query);
-		Instance i = new Instance(green, null, /* TODO CHANGE! */null);
-		Boolean r = (Boolean) i.request("sat");
-		if ((r != null) && r) {
-			return new char[] { '1' };
-		} else {
-			return new char[] { '0' };
+		log.info("QUERY: " + query.substring(0, Math.min(100, query.length())) + "...");
+		try {
+			// Decode Base64-encoded serialized Expression
+			byte[] data = Base64.getDecoder().decode(query);
+			ByteArrayInputStream bais = new ByteArrayInputStream(data);
+			ObjectInputStream ois = new ObjectInputStream(bais);
+			Expression expression = (Expression) ois.readObject();
+			ois.close();
+			
+			log.info("Parsed expression: " + expression);
+			
+			Instance i = new Instance(green, null, expression);
+			Boolean r = (Boolean) i.request("sat");
+			
+			log.info("SAT result: " + r);
+			
+			if ((r != null) && r) {
+				return new char[] { '1' };
+			} else {
+				return new char[] { '0' };
+			}
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Failed to process query", e);
+			return new char[] { 'E' }; // Error indicator
 		}
 	}
 
