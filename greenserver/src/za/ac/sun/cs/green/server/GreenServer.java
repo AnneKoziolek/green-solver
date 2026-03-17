@@ -99,41 +99,40 @@ public class GreenServer {
 	 * Initialize Green solvers for SAT checking and model extraction.
 	 */
 	private static void initializeSolvers() {
-		// Initialize SAT solver
+		// Initialize SAT solver (simple config without slicer to avoid null expression issues)
 		green = new Green("greenserver-sat");
 		log = green.getLog();
 
 		try {
 			Properties satProps = new Properties();
 			satProps.setProperty("green.services", "sat");
-			satProps.setProperty("green.service.sat", "(slice (canonize z3java))");
-			satProps.setProperty("green.service.sat.slice", "za.ac.sun.cs.green.service.slicer.SATSlicerService");
+			// Simplified: canonize -> z3 (no slicer to avoid null expression)
+			satProps.setProperty("green.service.sat", "(canonize z3java)");
 			satProps.setProperty("green.service.sat.canonize", "za.ac.sun.cs.green.service.canonizer.SATCanonizerService");
 			satProps.setProperty("green.service.sat.z3java", "za.ac.sun.cs.green.service.z3.SATZ3JavaService");
 			satProps.setProperty("green.z3java.timeout", "5000");
 
 			Configuration satConfig = new Configuration(green, satProps);
 			satConfig.configure();
-			log.info("SAT solver configured with Z3 Java");
+			log.info("SAT solver configured with Z3 Java (no slicer)");
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Failed to configure SAT solver: " + e.getMessage(), e);
 		}
 
-		// Initialize Model solver for variable value extraction
+		// Initialize Model solver for variable value extraction (direct to Z3)
 		greenModel = new Green("greenserver-model");
 
 		try {
 			Properties modelProps = new Properties();
 			modelProps.setProperty("green.services", "model");
-			modelProps.setProperty("green.service.model", "(slice (canonize z3javamodel))");
-			modelProps.setProperty("green.service.model.slice", "za.ac.sun.cs.green.service.slicer.SATSlicerService");
-			modelProps.setProperty("green.service.model.canonize", "za.ac.sun.cs.green.service.canonizer.ModelCanonizerService");
+			// Direct: z3javamodel only (simplest config for model extraction)
+			modelProps.setProperty("green.service.model", "z3javamodel");
 			modelProps.setProperty("green.service.model.z3javamodel", "za.ac.sun.cs.green.service.z3.ModelZ3JavaService");
 			modelProps.setProperty("green.z3java.timeout", "5000");
 
 			Configuration modelConfig = new Configuration(greenModel, modelProps);
 			modelConfig.configure();
-			log.info("Model solver configured with Z3 Java model extraction");
+			log.info("Model solver configured with Z3 Java model extraction (direct)");
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Failed to configure model solver: " + e.getMessage(), e);
 			greenModel = null;
