@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,42 +17,38 @@ import za.ac.sun.cs.green.expr.*;
 import za.ac.sun.cs.green.util.Configuration;
 
 /**
- * GreenServer - Standalone constraint solving server using JSON protocol.
+ * GreenServer - Standalone constraint solving server with Z3 model extraction.
  *
- * Protocol:
+ * Protocol v2 (model extraction):
  * - Client sends JSON representation of Green Expression
- * - Server responds with single char: '1' (SAT), '0' (UNSAT), 'E' (Error)
- * - Special commands: "QUIT" (shutdown), "CLOSE" (disconnect)
+ * - Server responds with JSON: {"sat":true/false,"model":{"var1":value1,...}}
+ *
+ * Legacy protocol fallback:
+ * - Single char response: '1' (SAT), '0' (UNSAT), 'E' (Error)
+ *
+ * Special commands: "QUIT" (shutdown), "CLOSE" (disconnect)
  */
 public class GreenServer {
 
 	private static Green green = null;
+	private static Green greenModel = null;
 	private static Logger log = null;
+	private static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("DEBUG", "true"));
 
 	public static void main(String[] args) {
-		green = new Green("greenserver");
-		log = green.getLog();
-
-		// Configure Z3 SAT solver
-		try {
-			Properties props = new Properties();
-			props.setProperty("green.services", "sat");
-			props.setProperty("green.service.sat", "z3");
-			props.setProperty("green.service.sat.z3", "za.ac.sun.cs.green.service.z3.SATZ3JavaService");
-			Configuration config = new Configuration(green, props);
-			config.configure();
-			log.info("Green server configured with Z3 solver (JSON protocol)");
-		} catch (Exception e) {
-			log.log(Level.SEVERE, "Failed to configure Z3 solver", e);
-			return;
-		}
+		initializeSolvers();
 
 		ServerSocket serverSocket = null;
 		Socket clientSocket = null;
 		BufferedReader input = null;
 		PrintStream output = null;
+
+		int port = Integer.parseInt(System.getProperty("SATPort", "9408"));
+
 		try {
-			serverSocket = new ServerSocket(9408);
+			serverSocket = new ServerSocket(port);
+			log.info("GreenServer started on port " + port + " with Z3 model extraction support");
+
 			boolean isRunning = true;
 			while (isRunning) {
 				log.info("Waiting for a client to connect...");
@@ -70,21 +67,22 @@ public class GreenServer {
 					if (query.equals("QUIT")) {
 						isRunning = false;
 						log.info("Received QUIT - shutting down server");
-						output.print("OK");
-						output.close();
+						output.println("OK");
 						try { input.close(); } catch (IOException x) { log.log(Level.SEVERE, "input.close() failed", x); }
 						try { clientSocket.close(); } catch (IOException x) { log.log(Level.SEVERE, "clientSocket.close() failed", x); }
 						break;
 					}
 					if (query.equals("CLOSE")) {
 						log.info("Closing the client connection");
-						output.print("OK");
-						output.close();
+						output.println("OK");
 						try { input.close(); } catch (IOException x) { log.log(Level.SEVERE, "input.close() failed", x); }
 						try { clientSocket.close(); } catch (IOException x) { log.log(Level.SEVERE, "clientSocket.close() failed", x); }
 						break;
 					}
-					output.print(process(query));
+					// Process query and return JSON with model
+					String response = processWithModel(query);
+					output.println(response);
+					output.flush();
 				}
 			}
 		} catch (IOException x) {
@@ -97,33 +95,163 @@ public class GreenServer {
 		}
 	}
 
-	private static char[] process(String query) {
+	/**
+	 * Initialize Green solvers for SAT checking and model extraction.
+	 */
+	private static void initializeSolvers() {
+		// Initialize SAT solver
+		green = new Green("greenserver-sat");
+		log = green.getLog();
+
+		try {
+			Properties satProps = new Properties();
+			satProps.setProperty("green.services", "sat");
+			satProps.setProperty("green.service.sat", "(slice (canonize z3java))");
+			satProps.setProperty("green.service.sat.slice", "za.ac.sun.cs.green.service.slicer.SATSlicerService");
+			satProps.setProperty("green.service.sat.canonize", "za.ac.sun.cs.green.service.canonizer.SATCanonizerService");
+			satProps.setProperty("green.service.sat.z3java", "za.ac.sun.cs.green.service.z3.SATZ3JavaService");
+			satProps.setProperty("green.z3java.timeout", "5000");
+
+			Configuration satConfig = new Configuration(green, satProps);
+			satConfig.configure();
+			log.info("SAT solver configured with Z3 Java");
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Failed to configure SAT solver: " + e.getMessage(), e);
+		}
+
+		// Initialize Model solver for variable value extraction
+		greenModel = new Green("greenserver-model");
+
+		try {
+			Properties modelProps = new Properties();
+			modelProps.setProperty("green.services", "model");
+			modelProps.setProperty("green.service.model", "(slice (canonize z3javamodel))");
+			modelProps.setProperty("green.service.model.slice", "za.ac.sun.cs.green.service.slicer.SATSlicerService");
+			modelProps.setProperty("green.service.model.canonize", "za.ac.sun.cs.green.service.canonizer.ModelCanonizerService");
+			modelProps.setProperty("green.service.model.z3javamodel", "za.ac.sun.cs.green.service.z3.ModelZ3JavaService");
+			modelProps.setProperty("green.z3java.timeout", "5000");
+
+			Configuration modelConfig = new Configuration(greenModel, modelProps);
+			modelConfig.configure();
+			log.info("Model solver configured with Z3 Java model extraction");
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "Failed to configure model solver: " + e.getMessage(), e);
+			greenModel = null;
+		}
+	}
+
+	/**
+	 * Process query with Z3 model extraction.
+	 * Returns JSON response with model values.
+	 */
+	@SuppressWarnings("unchecked")
+	private static String processWithModel(String query) {
 		log.info("QUERY (JSON): " + query.substring(0, Math.min(100, query.length())) + "...");
+
 		try {
 			// Parse JSON to Expression
 			Expression expression = parseJsonExpression(query);
 
 			if (expression == null) {
 				log.warning("Failed to parse JSON expression");
-				return new char[] { 'E' };
+				return "{\"sat\":false,\"error\":\"parse_error\"}";
 			}
 
-			log.info("Parsed expression: " + expression);
+			if (DEBUG) {
+				log.info("Parsed expression: " + expression);
+			}
 
-			Instance i = new Instance(green, null, expression);
-			Boolean r = (Boolean) i.request("sat");
+			// Try model extraction first (gets actual variable values from Z3)
+			if (greenModel != null) {
+				try {
+					Instance modelInstance = new Instance(greenModel, null, expression);
+					Object result = modelInstance.request("model");
 
-			log.info("SAT result: " + r);
+					if (result != null && result instanceof Map) {
+						Map<Variable, Object> model = (Map<Variable, Object>) result;
 
-			if ((r != null) && r) {
-				return new char[] { '1' };
+						if (DEBUG) {
+							log.info("Z3 returned model with " + model.size() + " variables");
+						}
+
+						// Build JSON response with model values
+						StringBuilder json = new StringBuilder();
+						json.append("{\"sat\":true,\"model\":{");
+
+						boolean first = true;
+						for (Map.Entry<Variable, Object> entry : model.entrySet()) {
+							if (!first) json.append(",");
+							first = false;
+
+							String varName = entry.getKey().getName();
+							Object value = entry.getValue();
+
+							json.append("\"").append(escapeJson(varName)).append("\":");
+
+							if (value == null) {
+								json.append("null");
+							} else if (value instanceof String) {
+								json.append("\"").append(escapeJson((String) value)).append("\"");
+							} else if (value instanceof Boolean) {
+								json.append(value.toString());
+							} else {
+								// Numeric value
+								json.append(value.toString());
+							}
+						}
+
+						json.append("}}");
+
+						if (DEBUG) {
+							log.info("Returning JSON model: " + json);
+						}
+
+						return json.toString();
+					}
+				} catch (Exception e) {
+					log.log(Level.WARNING, "Model extraction failed, falling back to SAT: " + e.getMessage());
+					if (DEBUG) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			// Fallback to SAT check only (no model values)
+			Instance satInstance = new Instance(green, null, expression);
+			Boolean isSat = (Boolean) satInstance.request("sat");
+
+			log.info("SAT result: " + isSat);
+
+			if (isSat != null && isSat) {
+				// SAT but no model values available
+				return "{\"sat\":true,\"model\":{}}";
 			} else {
-				return new char[] { '0' };
+				return "{\"sat\":false}";
 			}
+
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Failed to process query", e);
-			return new char[] { 'E' };
+			return "{\"sat\":false,\"error\":\"" + escapeJson(e.getMessage()) + "\"}";
 		}
+	}
+
+	/**
+	 * Escape JSON string value.
+	 */
+	private static String escapeJson(String s) {
+		if (s == null) return "";
+		StringBuilder sb = new StringBuilder();
+		for (char c : s.toCharArray()) {
+			switch (c) {
+				case '"': sb.append("\\\""); break;
+				case '\\': sb.append("\\\\"); break;
+				case '\n': sb.append("\\n"); break;
+				case '\r': sb.append("\\r"); break;
+				case '\t': sb.append("\\t"); break;
+				default: sb.append(c);
+			}
+		}
+		return sb.toString();
 	}
 
 	// ==================== JSON Parser ====================
