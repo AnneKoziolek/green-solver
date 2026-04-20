@@ -438,6 +438,16 @@ public class Z3JavaTranslator extends Visitor {
 					l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
 					stack.push(context.mkBVSLT((BitVecExpr) l, (BitVecExpr) r));
 				}
+				else if(l instanceof BitVecExpr && r instanceof IntExpr)
+				{
+					r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
+					stack.push(context.mkBVSLT((BitVecExpr) l, (BitVecExpr) r));
+				}
+				else if(r instanceof BitVecExpr && l instanceof IntExpr)
+				{
+					l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+					stack.push(context.mkBVSLT((BitVecExpr) l, (BitVecExpr) r));
+				}
 				else if(l instanceof BitVecExpr && r instanceof BitVecExpr)
 				{
 					stack.push(context.mkBVSLT((BitVecExpr) l, (BitVecExpr) r));
@@ -478,12 +488,22 @@ public class Z3JavaTranslator extends Visitor {
 				}
 				else if(l instanceof BitVecExpr && r instanceof IntNum)
 				{
-					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
 					stack.push(context.mkBVSLE((BitVecExpr) l, (BitVecExpr) r));
 				}
 				else if(r instanceof BitVecExpr && l instanceof IntNum)
 				{
-					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+					l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+					stack.push(context.mkBVSLE((BitVecExpr) l, (BitVecExpr) r));
+				}
+				else if(l instanceof BitVecExpr && r instanceof IntExpr)
+				{
+					r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
+					stack.push(context.mkBVSLE((BitVecExpr) l, (BitVecExpr) r));
+				}
+				else if(r instanceof BitVecExpr && l instanceof IntExpr)
+				{
+					l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
 					stack.push(context.mkBVSLE((BitVecExpr) l, (BitVecExpr) r));
 				}
 				else if(l instanceof BitVecExpr && r instanceof BitVecExpr)
@@ -536,6 +556,16 @@ public class Z3JavaTranslator extends Visitor {
 					l = context.mkBV(val, sortSize);
 					stack.push(context.mkBVSGT((BitVecExpr) l, (BitVecExpr) r));
 				}
+				else if(l instanceof BitVecExpr && r instanceof IntExpr)
+				{
+					r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
+					stack.push(context.mkBVSGT((BitVecExpr) l, (BitVecExpr) r));
+				}
+				else if(r instanceof BitVecExpr && l instanceof IntExpr)
+				{
+					l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+					stack.push(context.mkBVSGT((BitVecExpr) l, (BitVecExpr) r));
+				}
 				else if(r instanceof BitVecExpr && l instanceof BitVecExpr)
 					stack.push(context.mkBVSGT((BitVecExpr) l, (BitVecExpr) r));
 				else
@@ -570,14 +600,24 @@ public class Z3JavaTranslator extends Visitor {
 						throw new NotSatException();
 					stack.push(exp);
 				}
-				else if(l instanceof BitVecExpr && r instanceof IntExpr)
+				else if(l instanceof BitVecExpr && r instanceof IntNum)
 				{
-					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
 					stack.push(context.mkBVSGE((BitVecExpr) l, (BitVecExpr) r));
 				}
 				else if(r instanceof BitVecExpr && l instanceof IntNum)
 				{
 					l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+					stack.push(context.mkBVSGE((BitVecExpr) l, (BitVecExpr) r));
+				}
+				else if(l instanceof BitVecExpr && r instanceof IntExpr)
+				{
+					r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
+					stack.push(context.mkBVSGE((BitVecExpr) l, (BitVecExpr) r));
+				}
+				else if(r instanceof BitVecExpr && l instanceof IntExpr)
+				{
+					l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
 					stack.push(context.mkBVSGE((BitVecExpr) l, (BitVecExpr) r));
 				}
 				else if (l instanceof BitVecExpr && r instanceof BitVecExpr)
@@ -599,10 +639,14 @@ public class Z3JavaTranslator extends Visitor {
 				break;
 			case ADD:
 				if (l.isBV() || r.isBV()) {
-					if (l instanceof IntNum)
-						l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
-					else if (r instanceof IntNum)
-						r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					if (l instanceof BitVecExpr && r instanceof IntNum)
+						r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
+					if (r instanceof BitVecExpr && l instanceof IntNum)
+						l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+					if (l instanceof IntExpr && r instanceof BitVecExpr)
+						l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+					if (r instanceof IntExpr && l instanceof BitVecExpr)
+						r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 					stack.push(context.mkBVAdd((BitVecExpr) l, (BitVecExpr) r));
 				} else {
 					stack.push(context.mkAdd((ArithExpr) l, (ArithExpr) r));
@@ -610,11 +654,14 @@ public class Z3JavaTranslator extends Visitor {
 				break;
 			case SUB:
 				if (l.isBV() || r.isBV()) {
-					if (r instanceof IntNum)
+					if (l instanceof BitVecExpr && r instanceof IntNum)
 						r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
-					else if (l instanceof IntNum)
+					if (r instanceof BitVecExpr && l instanceof IntNum)
 						l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
-
+					if (l instanceof IntExpr && r instanceof BitVecExpr)
+						l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+					if (r instanceof IntExpr && l instanceof BitVecExpr)
+						r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 					stack.push(context.mkBVSub((BitVecExpr) l, (BitVecExpr) r));
 				} else {
 					stack.push(context.mkSub((ArithExpr) l, (ArithExpr) r));
@@ -622,11 +669,14 @@ public class Z3JavaTranslator extends Visitor {
 				break;
 			case MUL:
 				if (l.isBV() || r.isBV()) {
-					if (l instanceof IntNum)
-						l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
-					else if (r instanceof IntNum)
-						r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
-
+					if (l instanceof BitVecExpr && r instanceof IntNum)
+						r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
+					if (r instanceof BitVecExpr && l instanceof IntNum)
+						l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+					if (l instanceof IntExpr && r instanceof BitVecExpr)
+						l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+					if (r instanceof IntExpr && l instanceof BitVecExpr)
+						r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 					stack.push(context.mkBVMul((BitVecExpr) l, (BitVecExpr) r));
 				} else {
 					stack.push(context.mkMul((ArithExpr) l, (ArithExpr) r));
@@ -634,35 +684,45 @@ public class Z3JavaTranslator extends Visitor {
 				break;
 			case DIV:
 				if (l.isBV() || r.isBV()) {
-					if (l instanceof IntNum)
-						l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
-					else if (r instanceof IntNum)
-						r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
-					
+					if (l instanceof BitVecExpr && r instanceof IntNum)
+						r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
+					if (r instanceof BitVecExpr && l instanceof IntNum)
+						l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+					if (l instanceof IntExpr && r instanceof BitVecExpr)
+						l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+					if (r instanceof IntExpr && l instanceof BitVecExpr)
+						r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 					stack.push(context.mkBVSDiv((BitVecExpr) l, (BitVecExpr) r));
 				} else
 					stack.push(context.mkDiv((ArithExpr) l, (ArithExpr) r));
 				break;
 			case MOD:
 				if (l.isBV() || r.isBV()) {
-					if (l instanceof IntNum)
-						l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
-					else if (r instanceof IntNum)
-						r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
-					
+					if (l instanceof BitVecExpr && r instanceof IntNum)
+						r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
+					if (r instanceof BitVecExpr && l instanceof IntNum)
+						l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+					if (l instanceof IntExpr && r instanceof BitVecExpr)
+						l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+					if (r instanceof IntExpr && l instanceof BitVecExpr)
+						r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 					stack.push(context.mkBVSRem((BitVecExpr)l, (BitVecExpr)r));
 				} else
 					stack.push(context.mkMod((IntExpr) l, (IntExpr) r));
 				break;
 			case SHIFTL:
 				if (r instanceof BitVecExpr && l instanceof IntNum)
-					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
-				else if (l instanceof BitVecExpr || r instanceof BitVecExpr) {
+					l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+				if (l instanceof BitVecExpr || r instanceof BitVecExpr) {
 
-					if (l instanceof IntNum)
-						l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
-					else if (r instanceof IntNum)
-						r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					if (l instanceof BitVecExpr && r instanceof IntNum)
+						r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
+					if (r instanceof BitVecExpr && l instanceof IntNum)
+						l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+					if (l instanceof IntExpr && r instanceof BitVecExpr)
+						l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+					if (r instanceof IntExpr && l instanceof BitVecExpr)
+						r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 
 					BitVecExpr bvl = (BitVecExpr)l;
 					BitVecExpr bvr = (BitVecExpr)r;
@@ -693,20 +753,32 @@ public class Z3JavaTranslator extends Visitor {
 				break;
 			case SHIFTR:
 				if (l instanceof BitVecExpr && r instanceof IntNum)
-					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
+				if (r instanceof BitVecExpr && l instanceof IntNum)
+					l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+				if (l instanceof IntExpr && r instanceof BitVecExpr)
+					l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+				if (r instanceof IntExpr && l instanceof BitVecExpr)
+					r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 				BitVecExpr bl = (BitVecExpr) l;
 				BitVecExpr br = (BitVecExpr) r;
-				
+
 				br = context.mkExtract(5, 0, br);
 				br = context.mkZeroExt(bl.getSortSize() - 6, br);
 				stack.push(context.mkBVASHR(bl, br));
 				break;
 			case SHIFTUR:
 				if (l instanceof BitVecExpr && r instanceof IntNum)
-					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
+				if (r instanceof BitVecExpr && l instanceof IntNum)
+					l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+				if (l instanceof IntExpr && r instanceof BitVecExpr)
+					l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+				if (r instanceof IntExpr && l instanceof BitVecExpr)
+					r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 				bl = (BitVecExpr) l;
 				br = (BitVecExpr) r;
-				
+
 				br = context.mkExtract(5, 0, br);
 				br = context.mkZeroExt(bl.getSortSize() - 6, br);
 				stack.push(context.mkBVLSHR(bl, br));
@@ -765,9 +837,13 @@ public class Z3JavaTranslator extends Visitor {
 				break;
 			case BIT_OR:
 				if (l instanceof BitVecExpr && r instanceof IntNum)
-					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
+					r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
 				if (r instanceof BitVecExpr && l instanceof IntNum)
-					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
+					l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+				if (l instanceof IntExpr && r instanceof BitVecExpr)
+					l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+				if (r instanceof IntExpr && l instanceof BitVecExpr)
+					r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 				stack.push(context.mkBVOR((BitVecExpr)l, (BitVecExpr)r));
 				break;
 			case BIT_AND:
@@ -785,11 +861,14 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkBVNot((BitVecExpr)l));
 				break;
 			case BIT_XOR:
-				if (l instanceof IntNum)
-					l = context.mkBV(((IntNum)l).getInt(), ((BitVecExpr)r).getSortSize());
-				if (r instanceof IntNum)
-					r = context.mkBV(((IntNum)r).getInt(), ((BitVecExpr)l).getSortSize());
-
+				if (l instanceof BitVecExpr && r instanceof IntNum)
+					r = context.mkBV(((IntNum)r).getInt64(), ((BitVecExpr)l).getSortSize());
+				if (r instanceof BitVecExpr && l instanceof IntNum)
+					l = context.mkBV(((IntNum)l).getInt64(), ((BitVecExpr)r).getSortSize());
+				if (l instanceof IntExpr && r instanceof BitVecExpr)
+					l = context.mkInt2BV(((BitVecExpr)r).getSortSize(), (IntExpr)l);
+				if (r instanceof IntExpr && l instanceof BitVecExpr)
+					r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 				stack.push(context.mkBVXOR((BitVecExpr)l, (BitVecExpr)r));
 				break;
 			case BV2I:
