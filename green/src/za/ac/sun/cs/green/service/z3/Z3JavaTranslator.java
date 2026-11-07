@@ -23,6 +23,7 @@ import com.microsoft.z3.Expr;
 import com.microsoft.z3.FuncDecl;
 import com.microsoft.z3.IntExpr;
 import com.microsoft.z3.IntNum;
+import com.microsoft.z3.RealExpr;
 import com.microsoft.z3.SeqExpr;
 import com.microsoft.z3.Sort;
 import com.microsoft.z3.Z3Exception;
@@ -921,6 +922,37 @@ public class Z3JavaTranslator extends Visitor {
 			case BV2R:
 				stack.push(context.mkInt2Real(context.mkBV2Int((BitVecExpr) l, true)));
 				break;
+			case R2I: {
+				// CoCoPath/UncertainTree: floor (Z3 to_int).
+				ArithExpr x = l.isBV() ? context.mkInt2Real(context.mkBV2Int((BitVecExpr) l, true))
+						: (l.isInt() ? context.mkInt2Real((IntExpr) l) : (ArithExpr) l);
+				stack.push(context.mkReal2Int((RealExpr) x));
+				break;
+			}
+			case ROUND: {
+				// CoCoPath/UncertainTree: Java Math.round(x) = floor(x + 0.5), as an Int.
+				ArithExpr x = l.isBV() ? context.mkInt2Real(context.mkBV2Int((BitVecExpr) l, true))
+						: (l.isInt() ? context.mkInt2Real((IntExpr) l) : (ArithExpr) l);
+				stack.push(context.mkReal2Int((RealExpr) context.mkAdd(x, context.mkReal(1, 2))));
+				break;
+			}
+			case R2BV: {
+				// CoCoPath/UncertainTree: real -> Java int/long (truncation toward zero),
+				// int -> BV of the given width.
+				IntExpr t;
+				if (l.isInt()) {
+					t = (IntExpr) l;
+				} else if (l.isBV()) {
+					t = context.mkBV2Int((BitVecExpr) l, true);
+				} else {
+					RealExpr x = (RealExpr) l;
+					RealExpr zero = context.mkReal(0);
+					t = (IntExpr) context.mkITE(context.mkGe(x, zero), context.mkReal2Int(x),
+							context.mkUnaryMinus(context.mkReal2Int((RealExpr) context.mkUnaryMinus(x))));
+				}
+				stack.push(context.mkInt2BV(operation.getImmediate1(), t));
+				break;
+			}
 			case INDEXOFSTRING:
 				stack.push(context.mkIndexOf((SeqExpr) l, (SeqExpr) r, (ArithExpr) o));
 				break;
