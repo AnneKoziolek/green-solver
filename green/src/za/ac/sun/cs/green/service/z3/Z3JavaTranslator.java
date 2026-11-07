@@ -111,6 +111,34 @@ public class Z3JavaTranslator extends Visitor {
 		return result;
 	}
 	
+	private static boolean isNumericMixOperator(Operation.Operator op) {
+		switch (op) {
+			case EQ: case NE: case LT: case LE: case GT: case GE:
+			case ADD: case SUB: case MUL: case DIV:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	// int2bv(t) produced by R2BV, so toReal can use t instead of bv2int(int2bv(t)):
+	// Z3 handles that round trip on top of nonlinear real terms very badly (timeouts).
+	private final Map<Expr, IntExpr> int2bvOrigin = new HashMap<>();
+
+	private Expr toReal(Expr e) {
+		IntExpr origin = int2bvOrigin.get(e);
+		if (origin != null) {
+			return context.mkInt2Real(origin);
+		}
+		if (e.isBV()) {
+			return context.mkInt2Real(context.mkBV2Int((BitVecExpr) e, true));
+		}
+		if (e.isInt()) {
+			return context.mkInt2Real((IntExpr) e);
+		}
+		return e;
+	}
+
 	public Map<Variable, Expr> getVariableMap() {
 		return v2e;
 	}
@@ -327,6 +355,18 @@ public class Z3JavaTranslator extends Visitor {
 			}
 			if (!stack.isEmpty()) {
 				l = stack.pop();
+			}
+		}
+		// CoCoPath/UncertainTree: mixed real / bit-vector (or int) operands, e.g. a JDK
+		// conversion making an int out of a double inside an evaluator. Lift the
+		// non-real side to real (signed bv2int, then to_real).
+		if (arity == 2 && l != null && r != null && isNumericMixOperator(operation.getOperator())
+				&& l.isReal() != r.isReal() && (l.isBV() || l.isInt() || l.isReal())
+				&& (r.isBV() || r.isInt() || r.isReal())) {
+			if (l.isReal()) {
+				r = toReal(r);
+			} else {
+				l = toReal(l);
 			}
 		}
 		try {
@@ -950,7 +990,9 @@ public class Z3JavaTranslator extends Visitor {
 					t = (IntExpr) context.mkITE(context.mkGe(x, zero), context.mkReal2Int(x),
 							context.mkUnaryMinus(context.mkReal2Int((RealExpr) context.mkUnaryMinus(x))));
 				}
-				stack.push(context.mkInt2BV(operation.getImmediate1(), t));
+				Expr bv = context.mkInt2BV(operation.getImmediate1(), t);
+				int2bvOrigin.put(bv, t);
+				stack.push(bv);
 				break;
 			}
 			case INDEXOFSTRING:
