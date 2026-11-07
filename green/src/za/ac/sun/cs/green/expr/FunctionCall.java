@@ -7,6 +7,12 @@ import java.util.Arrays;
 
 public class FunctionCall extends Expression {
 
+	// CoCoPath/UncertainTree: explicit UID. The computed default differs between a
+	// Galette-instrumented JVM (shadow members) and a plain one, which broke
+	// serialization of constraints to an out-of-process solver.
+	private static final long serialVersionUID = 1L;
+
+
     public String name;
     public Expression[] arguments;
 

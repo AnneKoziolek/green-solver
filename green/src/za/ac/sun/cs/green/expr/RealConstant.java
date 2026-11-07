@@ -6,6 +6,12 @@ import java.io.ObjectOutput;
 
 public class RealConstant extends Constant {
 
+	// CoCoPath/UncertainTree: explicit UID. The computed default differs between a
+	// Galette-instrumented JVM (shadow members) and a plain one, which broke
+	// serialization of constraints to an out-of-process solver.
+	private static final long serialVersionUID = 1L;
+
+
 	public double value;
 
 	public RealConstant(){}
