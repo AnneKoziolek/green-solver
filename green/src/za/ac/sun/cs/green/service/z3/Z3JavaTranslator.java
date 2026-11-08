@@ -111,6 +111,56 @@ public class Z3JavaTranslator extends Visitor {
 		return result;
 	}
 	
+	private static boolean isIntArithOrCompare(Operation.Operator op) {
+		switch (op) {
+			case EQ: case NE: case LT: case LE: case GT: case GE:
+			case ADD: case SUB: case MUL: case DIV: case MOD:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	private static boolean isBitOperator(Operation.Operator op) {
+		switch (op) {
+			case BIT_AND: case BIT_OR: case BIT_XOR: case SHIFTL: case SHIFTR: case SHIFTUR:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/** An integer term that is not a numeral, i.e. derived from a bounded IntVariable. */
+	private static boolean isIntTerm(Expr e) {
+		return e.isInt() && !e.isNumeral();
+	}
+
+	private Expr bvToInt(Expr e) {
+		IntExpr origin = int2bvOrigin.get(e);
+		if (origin != null) {
+			return origin;
+		}
+		if (e instanceof BitVecNum) {
+			java.math.BigInteger v = ((BitVecNum) e).getBigInteger();
+			int size = ((BitVecNum) e).getSortSize();
+			if (v.testBit(size - 1)) {
+				v = v.subtract(java.math.BigInteger.ONE.shiftLeft(size));
+			}
+			return context.mkInt(v.toString());
+		}
+		return context.mkBV2Int((BitVecExpr) e, true);
+	}
+
+	/** Java int division (truncation toward zero) on Z3 integers; SMT-LIB div is Euclidean. */
+	private IntExpr javaIntDiv(IntExpr a, IntExpr b) {
+		IntExpr zero = context.mkInt(0);
+		IntExpr absA = (IntExpr) context.mkITE(context.mkLt(a, zero), context.mkUnaryMinus(a), a);
+		IntExpr absB = (IntExpr) context.mkITE(context.mkLt(b, zero), context.mkUnaryMinus(b), b);
+		IntExpr q = (IntExpr) context.mkDiv(absA, absB);
+		BoolExpr negative = context.mkXor(context.mkLt(a, zero), context.mkLt(b, zero));
+		return (IntExpr) context.mkITE(negative, context.mkUnaryMinus(q), q);
+	}
+
 	private static boolean isNumericMixOperator(Operation.Operator op) {
 		switch (op) {
 			case EQ: case NE: case LT: case LE: case GT: case GE:
@@ -355,6 +405,30 @@ public class Z3JavaTranslator extends Visitor {
 			}
 			if (!stack.isEmpty()) {
 				l = stack.pop();
+			}
+		}
+		// CoCoPath/UncertainTree: bounded-integer mode. Variables with an annotation domain are
+		// IntVariables (Z3 Int with bounds) instead of 32-bit bit-vectors, because Z3 is slow on
+		// bv2int inside nonlinear real arithmetic (measured: 83.8 s vs 0.45 s on 30 queries).
+		// Where such a term meets a bit-vector, the bit-vector side becomes an integer (bit
+		// operations go the other way). Unbounded variables stay bit-vectors.
+		if (arity == 2 && l != null && r != null) {
+			Operation.Operator op0 = operation.getOperator();
+			if (isIntArithOrCompare(op0)) {
+				if (isIntTerm(l) && r.isBV()) {
+					r = bvToInt(r);
+				} else if (isIntTerm(r) && l.isBV()) {
+					l = bvToInt(l);
+				}
+			} else if (isBitOperator(op0)) {
+				if (l.isInt() && r.isBV()) {
+					l = context.mkInt2BV(((BitVecExpr) r).getSortSize(), (IntExpr) l);
+				} else if (r.isInt() && l.isBV()) {
+					r = context.mkInt2BV(((BitVecExpr) l).getSortSize(), (IntExpr) r);
+				} else if (l.isInt() && r.isInt()) {
+					l = context.mkInt2BV(32, (IntExpr) l);
+					r = context.mkInt2BV(32, (IntExpr) r);
+				}
 			}
 		}
 		// CoCoPath/UncertainTree: mixed real / bit-vector (or int) operands, e.g. a JDK
@@ -734,7 +808,9 @@ public class Z3JavaTranslator extends Visitor {
 					if (r instanceof IntExpr && l instanceof BitVecExpr)
 						r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 					stack.push(context.mkBVSDiv((BitVecExpr) l, (BitVecExpr) r));
-				} else
+				} else if (l.isInt() && r.isInt())
+					stack.push(javaIntDiv((IntExpr) l, (IntExpr) r));
+				else
 					stack.push(context.mkDiv((ArithExpr) l, (ArithExpr) r));
 				break;
 			case MOD:
@@ -749,7 +825,9 @@ public class Z3JavaTranslator extends Visitor {
 						r = context.mkInt2BV(((BitVecExpr)l).getSortSize(), (IntExpr)r);
 					stack.push(context.mkBVSRem((BitVecExpr)l, (BitVecExpr)r));
 				} else
-					stack.push(context.mkMod((IntExpr) l, (IntExpr) r));
+					// Java %: sign of the dividend, a - b * trunc(a / b)
+					stack.push(context.mkSub((IntExpr) l,
+							context.mkMul((IntExpr) r, javaIntDiv((IntExpr) l, (IntExpr) r))));
 				break;
 			case SHIFTL:
 				if (r instanceof BitVecExpr && l instanceof IntNum)
@@ -849,6 +927,10 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkInt2BV(operation.getImmediate1(), (IntExpr) l));
 				break;
 			case EXTRACT:
+				if (l.isInt()) {
+					stack.push(l); // bounded integer: extract of the low bits is the value itself
+					break;
+				}
 				stack.push(context.mkExtract(operation.getImmediate1(), operation.getImmediate2(), (BitVecExpr)l));
 				break;
 			case SUBSTRING:
@@ -913,6 +995,10 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkBVXOR((BitVecExpr)l, (BitVecExpr)r));
 				break;
 			case BV2I:
+				if (l.isInt()) {
+					stack.push(l);
+					break;
+				}
 				stack.push(context.mkBV2Int((BitVecExpr)l, true));
 				break;
 			case STORE:
@@ -920,11 +1006,17 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkStore((ArrayExpr)o, l, r));
 				break;
 			case SIGN_EXT:
-				if (l.isInt())
-					l = context.mkInt2BV(operation.getImmediate1(), (IntExpr) l);
+				if (l.isInt()) {
+					stack.push(l); // bounded integer: sign extension keeps the value
+					break;
+				}
 				stack.push(context.mkSignExt(operation.getImmediate1(), (BitVecExpr)l));
 				break;
 			case ZERO_EXT:
+				if (l.isInt()) {
+					stack.push(l); // only used for non-negative values (char/byte widening)
+					break;
+				}
 				stack.push(context.mkZeroExt(operation.getImmediate1(), (BitVecExpr)l));
 				break;
 			case I2R:
@@ -960,6 +1052,10 @@ public class Z3JavaTranslator extends Visitor {
 				stack.push(context.mkReplace((SeqExpr)l, (SeqExpr)r, (SeqExpr)o));
 				break;
 			case BV2R:
+				if (l.isInt()) {
+					stack.push(context.mkInt2Real((IntExpr) l));
+					break;
+				}
 				stack.push(context.mkInt2Real(context.mkBV2Int((BitVecExpr) l, true)));
 				break;
 			case R2I: {
